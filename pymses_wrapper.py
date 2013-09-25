@@ -60,7 +60,6 @@ def load_output(output_dir):
     if os.path.isfile(format_file):
         with open(format_file) as f:
             field_descrs_str = f.readline()
-        print(field_descrs_str)
         
         field_descr_in = ast.literal_eval(field_descrs_str)
         field_descr = {}
@@ -77,8 +76,26 @@ def load_output(output_dir):
                 new_info_list.append(new_item)
             field_descr[file_type] = new_info_list
         
-        print(field_descr)
         ro.amr_field_descrs_by_file = {ndim_str: field_descr}
+    
+    # Read the info file ourselves because pymses does a crappy job
+    # and misses interesting things
+    info_file = os.path.join(
+        output_dir, 'info_{0:05d}.txt'.format(output_number))
+    
+    with open(info_file) as f:
+        lines = f.readlines()
+    
+    renamed_by_pymses = ['unit_l', 'unit_d', 'unit_t']
+    
+    for line in lines:
+        if line.count('=') == 1:
+            left, right = line.split('=', 1)
+            if (' ' not in left.strip()) and (' ' not in right.strip()):
+                name = left.strip()
+                value = ast.literal_eval(right.strip())
+                if (name not in ro.info) and (name not in renamed_by_pymses):
+                    ro.info[name] = value
     
     return ro
 
@@ -143,6 +160,24 @@ def get_code_units_guess(units, field_name):
         code_mks = pymses.utils.constants.Unit((0,0,0,0,0), 1.0)
     
     return code_mks
+
+
+def get_data_constants(ro):
+    """
+    Take a RAMSES object and return a dictionary of data constants
+    """
+    
+    # List of constants, and default values if missing
+    constants_list = [('mu_gas', 2.0)]
+    
+    constants_dict = {}
+    for const_name, const_default in constants_list:
+        if const_name in ro.info:
+            constants_dict[const_name] = ro.info[const_name]
+        else:
+            constants_dict[const_name] = const_default
+    
+    return constants_dict
 
 
 def get_minmax_res(ro):

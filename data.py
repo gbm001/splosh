@@ -131,6 +131,7 @@ class SimStep():
         self.time_mks = time_mks
         self.output_dir = output_dir
         self.data_set = data_set
+        self.data_constants = {}
     
     def __repr__(self):
         return 'SimStep({}, {}, {}, {})'.format(self.time, self.output_dir,
@@ -162,6 +163,7 @@ class SimStep():
         # Update quantities
         self.units = wrapper_functions.get_units(snapshot)
         self.time = wrapper_functions.get_time(snapshot)
+        self.data_constants = wrapper_functions.get_data_constants(snapshot)
         self.time_mks = wrapper_functions.get_code_mks(self.units, 'time')
         self.box_length = wrapper_functions.get_box_limits(snapshot)
         self.length_mks = wrapper_functions.get_code_mks(self.units, 'position')
