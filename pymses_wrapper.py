@@ -45,12 +45,42 @@ def get_output_id(output_dir):
 
 
 def load_output(output_dir):
+    import ast
+    from pymses.sources.ramses.output import Vector, Scalar
     """
     Load a RAMSES output and return the RamsesOutput object
     """
     base_path, output_number = convert_dir_to_RAMSES_args(output_dir)
     
-    return pymses.RamsesOutput(base_path, output_number)
+    ro = pymses.RamsesOutput(base_path, output_number)
+    
+    ndim_str = str(ro.ndim)+'D'
+    
+    format_file = os.path.join(output_dir, 'data_info.txt')
+    if os.path.isfile(format_file):
+        with open(format_file) as f:
+            field_descrs_str = f.readline()
+        print(field_descrs_str)
+        
+        field_descr_in = ast.literal_eval(field_descrs_str)
+        field_descr = {}
+        for file_type, info_list in field_descr_in.items():
+            new_info_list = []
+            for item in info_list:
+                if item[0] == 'Scalar':
+                    new_item = Scalar(*item[1:])
+                elif item[0] == 'Vector':
+                    new_item = Vector(*item[1:])
+                else:
+                    raise ValueError('Unknown entry type '
+                                     '(not Scalar or Vector)!')
+                new_info_list.append(new_item)
+            field_descr[file_type] = new_info_list
+        
+        print(field_descr)
+        ro.amr_field_descrs_by_file = {ndim_str: field_descr}
+    
+    return ro
 
 
 def get_time(ro):
