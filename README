@@ -1,0 +1,6 @@
+Splosh
+Andrew McLeod
+
+A tool to view RAMSES data files, in the style of Daniel Price's SPLASH.
+
+Uses Pymses to read the data file and Matplotlib to show the data.
