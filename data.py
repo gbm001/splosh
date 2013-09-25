@@ -50,6 +50,7 @@ class SharedData():
         # Load the first data set
         first_step = self.sim_step_list[0]
         first_step.load_dataset()
+        self.data_constants = first_step.data_constants
         
         # Determine the available variables
         self.fields_list = wf.get_fields(first_step.data_set)

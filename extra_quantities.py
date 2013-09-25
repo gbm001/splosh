@@ -32,7 +32,7 @@ def set_quantities(shared, config_section, *args):
         else:
             print(' >> Invalid input string!')
             continue
-       
+
 
 def print_quantities(shared):
     """
@@ -41,6 +41,15 @@ def print_quantities(shared):
     from .interactive import window_width
     field_width = (window_width / 2)
     titles = []
+    
+    print()
+    print('Defined data constants:')
+    if shared.data_constants:
+        for name, value in shared.data_constants.items():
+            print('    {} = {}'.format(name, value))
+    else:
+        print('    None')
+    print()
     
     print('Extra quantities:')
     
@@ -52,7 +61,7 @@ def print_quantities(shared):
             expression = field_mapping.extra
             print(' {}) {} = {}'.format(i+1, title, expression))
     if not are_any:
-        print('  None')
+        print('    None')
     print()
 
 
@@ -93,6 +102,12 @@ def add_quantity(shared, name=None, expression=None, no_save=False):
         print(' >> Cannot edit datafile quantity!')
         return
     
+    data_constant_names = list(shared.data_constants.keys())
+    
+    if name in data_constant_names:
+        print(' >> Cannot edit defined data constant!')
+        return
+    
     if name in extras_list:
         exists = True
         slot = extras_list.index(name)
@@ -100,7 +115,7 @@ def add_quantity(shared, name=None, expression=None, no_save=False):
         exists = False
     
     parser = python_math_parser.PythonMathParser()
-    parser.set_locals(locals_list)
+    parser.set_locals(locals_list + data_constant_names)
     try:
         parsed = parser.parse(expression)
     except ValueError:
@@ -109,10 +124,13 @@ def add_quantity(shared, name=None, expression=None, no_save=False):
     
     for item in python_math_parser.walk(parsed):
         if isinstance(item[0], str):
-            fm_slot = locals_list.index(item[0])
-            fm = shared.field_mappings[fm_slot]
-            field_tuple_str = str((fm.field.name, fm.index, fm.field.width))
-            item[0] = field_tuple_str
+            if item[0] in data_constant_names:
+                item[0] = shared.data_constants[item[0]]
+            else:
+                fm_slot = locals_list.index(item[0])
+                fm = shared.field_mappings[fm_slot]
+                field_tuple_str = str((fm.field.name, fm.index, fm.field.width))
+                item[0] = field_tuple_str
     
     fm = data.FieldMapping(name)
     fm.field = data.DataField(name, width=1, flags=['extra'])
