@@ -190,13 +190,15 @@ def format_fields(shared, len_line=window_width):
     right_col = num_mappings // 2
     left_col = num_mappings - right_col
     len_numbers = len(str(left_col))
+    len_last_left_col = len(str(left_col))
+    time_plot_indent = ' ' * (len_last_left_col - 1)
     
     field_lines = []
     for i in range(left_col):
         ii = i + left_col
         left_no = str(i).rjust(len_numbers)
         if i==0:
-            left_string = '0) Time plots'
+            left_string = '{}0) Time plots'.format(time_plot_indent)
         else:
             left_string = '{}) {}'.format(left_no, fm_titles[i-1])
         right_no = str(ii).rjust(len_numbers)
