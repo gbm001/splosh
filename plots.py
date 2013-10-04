@@ -325,28 +325,27 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     if has_x_unit and x_axis is not None:
         unit_tuple_str = shared.config.get('units', '_'+x_field.name)
         x_unit, x_unit_str = ast.literal_eval(unit_tuple_str)
-        x_unit_str = ' (' + x_unit_str + ')'
+        x_unit_str = ' [' + x_unit_str + ']'
     else:
         x_unit = 1.0
         x_unit_str = ''
     if has_y_unit and y_axis is not None:
         unit_tuple_str = shared.config.get('units', '_'+y_field.name)
         y_unit, y_unit_str = ast.literal_eval(unit_tuple_str)
-        y_unit_str = ' (' + y_unit_str + ')'
+        y_unit_str = ' [' + y_unit_str + ']'
     else:
         y_unit = 1.0
         y_unit_str = ''
     if has_render_unit:
         unit_tuple_str = shared.config.get('units', '_'+render_field.name)
         render_unit, render_unit_str = ast.literal_eval(unit_tuple_str)
-        render_unit_str = ' (' + render_unit_str + ')'
     else:
         render_unit = 1.0
         render_unit_str = ''
     if has_vector_unit:
         unit_tuple_str = shared.config.get('units', '_'+vector_field.name)
         vector_unit, vector_unit_str = ast.literal_eval(unit_tuple_str)
-        vector_unit_str = ' (' + vector_unit_str + ')'
+        vector_unit_str = ' [' + vector_unit_str + ']'
     else:
         vector_unit = 1.0
         vector_unit_str = ''
@@ -356,6 +355,9 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     else:
         time_unit = 1.0
         time_unit_str = ''
+    
+    if plot_type == 'render':
+        proj = (shared.config.get('xsec', 'plot_type') == 'proj')
     
     # Set options for plot (title, axes etc)
     step = shared.sim_step_list[step_no]
@@ -382,7 +384,7 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
                         'x', plot_options['ylabel']))
         
         if plot_type == 'time':
-            plot_options['xlabel'] = 'Time ({})'.format(time_unit_str)
+            plot_options['xlabel'] = 'Time [{}]'.format(time_unit_str)
             plot_options['time_label'] = ''
         else:
             rounded_time = text_helpers.round_to_n(time)
@@ -407,7 +409,19 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
             elif plot_type == 'render':
                 plot_options['colourbar'] = True
                 clabel = shared.field_mappings[render].title
-                plot_options['colourbar_label'] = clabel + render_unit_str
+                if proj:
+                    if shared.config.has_option('units', 'column'):
+                        unit_tuple_str = shared.config.get('units', 'column')
+                        c_unit_str = ast.literal_eval(unit_tuple_str)[1]
+                    else:
+                        c_unit_str = render_unit_str
+                    
+                    clabel = (r'\int ' + clabel + r' dz' + ' [' +
+                              render_unit_str + r' \times ' + c_unit_str + ']')
+                else:
+                    clabel = clabel + '[' + render_unit_str + ']'
+                
+                plot_options['colourbar_label'] = clabel
                 if plot_transforms['render_transform'] is not None:
                     plot_options['colourbar_label'] = (
                         transform_keys['render_transform'].replace(
@@ -562,7 +576,6 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         ret_tuple = (data_list, draw_limits, plot_options)
         
     elif plot_type == 'render':
-        proj = (shared.config.get('xsec', 'plot_type') == 'proj')
         # Data from analysis function
         
         data_list, xy_limits, render_limits = analysis.get_render_plot(
