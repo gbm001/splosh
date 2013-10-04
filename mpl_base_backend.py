@@ -262,6 +262,7 @@ class BackendMPL():
             if 'colourbar_ticks' in self.plot_options:
                 cbar.set_ticks(self.plot_options['colourbar_ticks'])
         else:
+            cbar = None
             self.cbar_axes = None
         
         # Turn off silly offset thing
@@ -275,6 +276,12 @@ class BackendMPL():
             y_formatter.set_useOffset(False)
         except AttributeError:
             pass
+        if cbar is not None:
+            cbar_formatter = cbar.ax.get_yaxis().get_major_formatter()
+            try:
+                cbar_formatter.set_useOffset(False)
+            except AttributeError:
+                pass
         
         # Write figure to file
         self.output_canvas()
