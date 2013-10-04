@@ -35,39 +35,58 @@ def set_units(shared, *args):
         input_string = input(prompt).strip()
         if not input_string:
             return
-        if not input_string.isdigit():
+        if not input_string == '-1' or input_string.isdigit():
             print(' >> Invalid input string!')
             continue
         unit_index = int(input_string)
-        if not (0 <= unit_index <= len(fields)):
+        if not (-1 <= unit_index <= len(fields)):
             print(' >> Invalid choice!')
             continue
         
         # Find existing limits
-        if unit_index == 0:
-            if shared.config.has_option('units', 'time'):
-                unit_tuple_str = shared.config.get('units', 'time')
+        if unit_index == -1:
+            if shared.config.has_option('units', 'column'):
+                unit_tuple_str = shared.config.get('units', 'column')
                 val, unit_str = ast.literal_eval(unit_tuple_str)
             else:
-                val = 1.0
+                val = 'SAME'
                 unit_str = ''
+            prompt = ("Enter multiplier (number to multiply values by),\n"
+                    "or SAME to use same units as x/y/z "
+                    "[default={}]: ".format(val))
+            
         else:
-            field = fields[unit_index - 1]
-            if shared.config.has_option('units', '_'+field.name):
-                unit_tuple_str = shared.config.get('units', '_'+field.name)
-                val, unit_str = ast.literal_eval(unit_tuple_str)
+            if unit_index == 0:
+                if shared.config.has_option('units', 'time'):
+                    unit_tuple_str = shared.config.get('units', 'time')
+                    val, unit_str = ast.literal_eval(unit_tuple_str)
+                else:
+                    val = 1.0
+                    unit_str = ''
             else:
-                val = 1.0
-                unit_str = ''
+                field = fields[unit_index - 1]
+                if shared.config.has_option('units', '_'+field.name):
+                    unit_tuple_str = shared.config.get('units', '_'+field.name)
+                    val, unit_str = ast.literal_eval(unit_tuple_str)
+                else:
+                    val = 1.0
+                    unit_str = ''
+            
+            prompt = ("Enter multiplier (number to multiply values by) "
+                        "[default={}]: ".format(val))
         
-        # Offer to change limit
-        prompt = ("Enter multiplier (number to multiply values by) "
-                  "[default={}]: ".format(val))
         while True:
             input_string = input(prompt).strip()
             if not input_string:
-                new_val = val
-                break
+                if unit_index == -1 and val == 'SAME':
+                    shared.config.remove_option('units', 'column')
+                    return
+                else:
+                    new_val = val
+                    break
+            if unit_index == -1 and input_string == 'SAME':
+                shared.config.remove_option('units', 'column')
+                return
             try:
                 new_val = float(input_string)
             except ValueError:
@@ -90,7 +109,9 @@ def set_units(shared, *args):
         
         # Save new limits to configparser
         new_unit_tuple_str = repr((new_val, new_unit_str))
-        if unit_index == 0:
+        if unit_index == -1:
+            shared.config.set('units', 'column', new_unit_tuple_str)
+        elif unit_index == 0:
             shared.config.set('units', 'time', new_unit_tuple_str)
         else:
             shared.config.set('units', '_'+field.name, new_unit_tuple_str)
@@ -107,6 +128,19 @@ def print_units(shared, fields):
     titles = []
     val_strs = []
     unit_strs = []
+    
+    opt_width = len(str(len(fields))) + 3
+    opt_width = max(opt_width, 5)
+    
+    titles.append('integrated column length')
+    if shared.config.has_option('units', 'column'):
+        unit_tuple_str = shared.config.get('units', 'column')
+        val, unit_str = ast.literal_eval(unit_tuple_str)
+        val_strs.append(str(val))
+        unit_strs.append(unit_str)
+    else:
+        val_strs.append('same as x/y/z')
+        unit_strs.append('NONE')
     
     titles.append('time')
     if shared.config.has_option('units', 'time'):
@@ -150,7 +184,8 @@ def print_units(shared, fields):
         title = titles[i].ljust(title_len)
         val_str = val_strs[i].ljust(min_max_len)
         unit_str = unit_strs[i].ljust(min_max_len)
-        print('({}) {} : ( {} : {} )'.format(i, title, val_str, unit_str))
+        opt_no = '({})'.format(i-1).ljust(opt_width)
+        print(' {}{} : ( {} : {} )'.format(opt_no, title, val_str, unit_str))
     
     return
 
