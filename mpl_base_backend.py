@@ -277,11 +277,8 @@ class BackendMPL():
         except AttributeError:
             pass
         if cbar is not None:
-            cbar_formatter = cbar.ax.get_yaxis().get_major_formatter()
-            try:
-                cbar_formatter.set_useOffset(False)
-            except AttributeError:
-                pass
+            cbar.formatter.set_useOffset(False)
+            cbar.update_ticks()
         
         # Write figure to file
         self.output_canvas()
