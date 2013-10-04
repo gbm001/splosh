@@ -175,6 +175,7 @@ def get_render_plot(x_field, x_index, x_unit,
     """
     from . import wrapper_functions as wf
     import numpy as np
+    import ast
     
     # Box length and transforms
     box_length = step.box_length
@@ -195,18 +196,26 @@ def get_render_plot(x_field, x_index, x_unit,
     ylim = (np.array(draw_limits['y_axis']) * y_unit /
                 (step.length_mks * box_length[y_index]))
     
+    # Get grid data WITHOUT render_transform: transform later
     grid_data = wf.get_grid_data(
             x_field, x_index, xlim, y_field, y_index, ylim,
-            render_field, render_index, render_fac,
-            plot_transforms['render_transform'],
+            render_field, render_index, render_fac, None,
             vector_field, vector_fac, data_limits,
             proj, resolution, z_slice, step, shared)
     
     if proj:
         # account for integral over 0->1 instead of physical units
-        xy_fac = step.length_mks / x_unit
+        if shared.config.has_option('units', 'column'):
+            unit_tuple_str = shared.config.get('units', 'column')
+            column_unit, unit_str = ast.literal_eval(unit_tuple_str)
+        else:
+            column_unit = x_unit
+        xy_fac = step.length_mks / column_unit
         if xy_fac != 1.0:
             grid_data = grid_data * xy_fac
+        
+        if plot_transforms['render_transform'] is not None:
+            grid_data = plot_transforms['render_transform'][0](grid_data)
     
     # Plot limits
     xmin, xmax = draw_limits['x_axis']
@@ -224,7 +233,7 @@ def get_render_plot(x_field, x_index, x_unit,
     if (render_transform is not None) and (cmin > cmax):
         cmin, cmax = cmax, cmin
 
-    if np.allclose(cmin, cmax, rtol=1e-20, atol=1e-100):
+    if np.allclose(cmin, cmax, rtol=1e-10, atol=1e-50):
         if draw_limits['render'][0] == 'auto':
             cmin = bracket_data(cmin, render_transform)[0]
         if draw_limits['render'][1] == 'auto':
