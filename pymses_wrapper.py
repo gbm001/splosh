@@ -342,9 +342,9 @@ def get_cell_data(x_field, x_index, y_field, y_index,
         data_array_list.append(temp_data_array)
         
         if mass_weighted:
-            weights_list.append(cells.get_sizes() * cells['rho'])
+            weights_list.append(cells.get_sizes()**3 * cells['rho'])
         else:
-            weights_list.append(cells.get_sizes())
+            weights_list.append(cells.get_sizes()**3)
         
         cells = None
     
