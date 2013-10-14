@@ -113,7 +113,7 @@ def mouse_zoom_cbar(backend, clim):
         backend.plot_args['plot_limits']['render'] = clim
     else:
         backend.plot_args['plot_limits']['render'] = render_transform[1](clim)
-    plots.update_plot_data(backend)
+    plots.update_plot_data(backend, True)
 
 
 def key_help_menu(backend, *args):
@@ -350,7 +350,7 @@ def key_cbar_invert(backend, axes_name, x, y, key, info):
         backend.plot_args['cmap_invert'] = 'yes'
         print('Colour scheme inverted')
     
-    plots.update_plot_data(backend)
+    plots.update_plot_data(backend, True)
 
 
 def key_factor(backend, axes_name, x, y, key, info):
@@ -506,7 +506,7 @@ def key_zoom(backend, axes_name, x, y, key, info):
         backend.zoom_factor = 1
         backend.zoom_mult = 1
         
-    plots.update_plot_data(backend)
+    plots.update_plot_data(backend, zoom_c)
     
     
     

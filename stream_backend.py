@@ -65,7 +65,7 @@ class BackendStream():
             self.data_array = self.data_list[0]
         
         elif plot_type == 'hist2d':
-            xedges, yedges, counts = self.data_list
+            xedges, yedges, counts, min_max_data = self.data_list
             
             self.data_array = np.empty((len(xedges)*len(yedges), 3))
             

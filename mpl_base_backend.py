@@ -100,7 +100,7 @@ class BackendMPL():
         
         elif plot_type == 'hist2d':
             
-            xedges, yedges, counts = self.data_list
+            xedges, yedges, counts, min_max_data = self.data_list
             
             img = ax.pcolorfast(xedges, yedges, counts.T, cmap=cmap)
             ax.set_xlim(xedges[0], xedges[-1])

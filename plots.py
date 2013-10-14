@@ -566,17 +566,17 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     # Get data
     if plot_type == 'hist2d':
         if use_old_data:
-            data_list = backend.data_list
-            draw_limits['xy_limits'] = backend.draw_limits['xy_limits']
+            data_list_pass = backend.data_list
         else:
-            # Data from analysis function
-            data_list, xy_limits = analysis.get_histogram2d(
-                x_field, x_index, x_unit, x_pos,
-                y_field, y_index, y_unit, y_pos,
-                resolution, plot_transforms,
-                draw_limits, data_limits, step, shared)
-            
-            draw_limits['xy_limits'] = xy_limits
+            data_list_pass = None
+        # Data from analysis function
+        data_list, xy_limits = analysis.get_histogram2d(
+            x_field, x_index, x_unit, x_pos,
+            y_field, y_index, y_unit, y_pos,
+            resolution, plot_transforms,
+            draw_limits, data_limits, step, shared, data_list_pass)
+        
+        draw_limits['xy_limits'] = xy_limits
         plot_options['plot_type'] = 'hist2d'
         
         ret_tuple = (data_list, draw_limits, plot_options)
@@ -585,20 +585,19 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         # Data from analysis function
         
         if use_old_data:
-            data_list = backend.data_list
-            draw_limits['xy_limits'] = backend.draw_limits['xy_limits']
-            draw_limits['render'] = backend.draw_limits['render']
+            data_list_pass = backend.data_list
         else:
-            data_list, xy_limits, render_limits = analysis.get_render_plot(
-                    x_field, x_index, x_unit,
-                    y_field, y_index, y_unit,
-                    render_field, render_index, render_unit,
-                    vector_field, vector_unit, proj, z_slice,
-                    resolution, plot_transforms, draw_limits,
-                    data_limits, step, shared)
+            data_list_pass = None
+        data_list, xy_limits, render_limits = analysis.get_render_plot(
+                x_field, x_index, x_unit,
+                y_field, y_index, y_unit,
+                render_field, render_index, render_unit,
+                vector_field, vector_unit, proj, z_slice,
+                resolution, plot_transforms, draw_limits,
+                data_limits, step, shared, data_list_pass)
         
-            draw_limits['xy_limits'] = xy_limits
-            draw_limits['render'] = render_limits
+        draw_limits['xy_limits'] = xy_limits
+        draw_limits['render'] = render_limits
         plot_options['plot_type'] = 'render'
         
         ret_tuple = (data_list, draw_limits, plot_options)
