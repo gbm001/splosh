@@ -498,7 +498,7 @@ def time_plotting(shared, axis):
                        #lambda x, w: np.sqrt(np.sum(x**2))),
                       ('min', 'min', lambda x, w: np.min(x)),
                       ('max', 'max', lambda x, w: np.max(x)),
-                      ('weighted sum', 'sum', lambda x, w: np.sum(x*w))]
+                      ('sum(value * weight)', 'sum', lambda x, w: np.sum(x*w))]
     
     # Field properties
     field = shared.field_mappings[axis].field
