@@ -250,12 +250,13 @@ def time_plot_wrapper(**plot_args):
     return [time_data], draw_limits, plot_options
 
 
-def update_plot_data(backend):
+def update_plot_data(backend, use_old_data=False):
     """
     Reload data and replot, under the assumption that the saved data in backend
     has been changed or updated
     """
-    plot_args = backend.plot_args
+    plot_args = dict(backend.plot_args)
+    plot_args['use_old_data'] = use_old_data
     
     if backend.plot_args['plot_type'] == 'time':
         (data_list, draw_limits, plot_options) = time_plot_wrapper(**plot_args)
@@ -273,7 +274,8 @@ def update_plot_data(backend):
 def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
                      vector, plot_type, z_slice, step_no, cmap, cmap_invert,
                      plot_limits, data_limits, transform_keys, plot_transforms,
-                     backend, shared, plot_options=None, **kwargs):
+                     backend, shared, plot_options=None, use_old_data=False,
+                     **kwargs):
     """
     Data for plotting to file or screen
     """
@@ -563,14 +565,18 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     
     # Get data
     if plot_type == 'hist2d':
-        # Data from analysis function
-        data_list, xy_limits = analysis.get_histogram2d(
-            x_field, x_index, x_unit, x_pos,
-            y_field, y_index, y_unit, y_pos,
-            resolution, plot_transforms,
-            draw_limits, data_limits, step, shared)
-        
-        draw_limits['xy_limits'] = xy_limits
+        if use_old_data:
+            data_list = backend.data_list
+            draw_limits['xy_limits'] = backend.draw_limits['xy_limits']
+        else:
+            # Data from analysis function
+            data_list, xy_limits = analysis.get_histogram2d(
+                x_field, x_index, x_unit, x_pos,
+                y_field, y_index, y_unit, y_pos,
+                resolution, plot_transforms,
+                draw_limits, data_limits, step, shared)
+            
+            draw_limits['xy_limits'] = xy_limits
         plot_options['plot_type'] = 'hist2d'
         
         ret_tuple = (data_list, draw_limits, plot_options)
@@ -578,22 +584,26 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     elif plot_type == 'render':
         # Data from analysis function
         
-        data_list, xy_limits, render_limits = analysis.get_render_plot(
-                x_field, x_index, x_unit,
-                y_field, y_index, y_unit,
-                render_field, render_index, render_unit,
-                vector_field, vector_unit, proj, z_slice,
-                resolution, plot_transforms, draw_limits,
-                data_limits, step, shared)
+        if use_old_data:
+            data_list = backend.data_list
+            draw_limits['xy_limits'] = backend.draw_limits['xy_limits']
+            draw_limits['render'] = backend.draw_limits['render']
+        else:
+            data_list, xy_limits, render_limits = analysis.get_render_plot(
+                    x_field, x_index, x_unit,
+                    y_field, y_index, y_unit,
+                    render_field, render_index, render_unit,
+                    vector_field, vector_unit, proj, z_slice,
+                    resolution, plot_transforms, draw_limits,
+                    data_limits, step, shared)
         
-        draw_limits['xy_limits'] = xy_limits
-        draw_limits['render'] = render_limits
+            draw_limits['xy_limits'] = xy_limits
+            draw_limits['render'] = render_limits
         plot_options['plot_type'] = 'render'
         
         ret_tuple = (data_list, draw_limits, plot_options)
     elif plot_type == 'time':
         # Data from analysis function
-        
         cell_data, weights = analysis.get_single_data(
             y_field, y_index, y_unit, plot_transforms['y_transform'],
             data_limits, step, shared)
@@ -606,8 +616,8 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         if plot_type.properties['data_type'] == 'cell_data':
         
             data_array, weights = analysis.get_single_data(
-                x_field, x_index, x_unit, plot_transforms['x_transform'],
-                data_limits, step, shared)
+                    x_field, x_index, x_unit, plot_transforms['x_transform'],
+                    data_limits, step, shared)
         
         elif plot_type.properties['data_type'] == 'sample_data':
             

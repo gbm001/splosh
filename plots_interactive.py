@@ -335,7 +335,7 @@ def key_cbar(backend, axes_name, x, y, key, info):
     backend.plot_args['cmap'] = new_cmap
     
     
-    plots.update_plot_data(backend)
+    plots.update_plot_data(backend, True)
 
 
 def key_cbar_invert(backend, axes_name, x, y, key, info):
