@@ -213,9 +213,9 @@ def get_render_plot(x_field, x_index, x_unit,
         xy_fac = step.length_mks / column_unit
         if xy_fac != 1.0:
             grid_data = grid_data * xy_fac
-        
-        if plot_transforms['render_transform'] is not None:
-            grid_data = plot_transforms['render_transform'][0](grid_data)
+    
+    if plot_transforms['render_transform'] is not None:
+        grid_data = plot_transforms['render_transform'][0](grid_data)
     
     # Plot limits
     xmin, xmax = draw_limits['x_axis']
