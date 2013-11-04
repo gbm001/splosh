@@ -575,9 +575,9 @@ def single_axis_plotting(shared, axis):
         break
     
     # Check for options
-    operation = tuple(operation_list[plot_choice-1])
-    if 'extra_interactive' in operation[1]:
-        operation[1]['extra_interactive'](shared)
+    operation = operation_list[plot_choice-1]
+    if 'extra_interactive' in operation.properties:
+        operation.properties['extra_interactive'](shared)
     
     # prompt for backend
     backend = prompt_for_backend(shared)

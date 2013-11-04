@@ -3,6 +3,13 @@ This submodule organizes analysis tasks, such as calculating histograms, and
 interfaces with wrapper modules to obtain data
 """
 
+# input and xrange, Python 3 style
+try:
+    range = xrange
+    input = raw_input
+except NameError:
+    pass
+
 class analysis_tool():
     def __init__(self, func, properties=None):
         self.func = func
