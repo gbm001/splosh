@@ -79,7 +79,7 @@ def set_limits(shared, config_section, limit_type):
             while True:
                 input_string = input(prompt).strip()
                 if not input_string:
-                    new_limits_right = limits[1]
+                    new_limit_right = limits[1]
                     break
                 try:
                     new_limit_right = float(input_string)
