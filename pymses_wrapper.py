@@ -687,6 +687,9 @@ def function_filter_stack(source, data_limits):
             name = limit['name']
             index = limit['index']
             min_f, max_f = limit['limits']
+            code_mks = field.code_mks
+            min_f = min_f / code_mks
+            max_f = max_f / code_mks
             # Determine if field is scalar or vector
             if limit['width'] == 1:
                 # scalar filters
@@ -853,23 +856,4 @@ def calc_units_mks(shared, field):
         parsed, lookup_table, unary_dict=unit_unary_dict,
         binary_dict=unit_binary_dict)()
     field.code_mks = mks.val
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

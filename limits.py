@@ -152,6 +152,11 @@ def get_current_limits(x_axis, x_index, y_axis, y_index, render,
                 f_name = shared.field_mappings[i].field.name
                 f_index = shared.field_mappings[i].index
                 f_width = shared.field_mappings[i].field.width
+                if (shared.config.get('data', 'use_units') == 'on' and
+                        shared.config.has_option('units', '_' + field.name)):
+                    unit_tuple_str = shared.config.get('units', '_'+field.name)
+                    unit, unit_str = ast.literal_eval(unit_tuple_str)
+                    f_limits = (f_limits[0]*unit, f_limits[1]*unit)
                 data_limits.append({'name': f_name,
                                     'field': field,
                                     'index': f_index,
