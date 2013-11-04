@@ -390,7 +390,7 @@ def PDF_interactive(shared):
         break
     
     while True:
-        input_string = input('Enter maximum: ').strip()
+        input_string = input('Enter maximum [default=auto]: ').strip()
         if not input_string:
             bin_max = 'auto'
             break
