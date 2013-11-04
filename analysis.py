@@ -374,35 +374,35 @@ def PDF_interactive(shared):
             continue
         break
         
-        while True:
-            input_string = input('Enter minimum [default=auto]').strip()
-            if not input_string:
-                bin_min = 'auto'
-                break
-            try:
-                bin_min = float(input_string)
-            except ValueError:
-                print(' >> Not a valid number!')
-                continue
-            if not isfinite(bin_min):
-                print(' >> Not a valid number!')
-                continue
+    while True:
+        input_string = input('Enter minimum [default=auto]').strip()
+        if not input_string:
+            bin_min = 'auto'
             break
-        
-        while True:
-            input_string = input('Enter maximum').strip()
-            if not input_string:
-                bin_max = 'auto'
-                break
-            try:
-                bin_max = float(input_string)
-            except ValueError:
-                print(' >> Not a valid number!')
-                continue
-            if not isfinite(bin_max):
-                print(' >> Not a valid number!')
-                continue
+        try:
+            bin_min = float(input_string)
+        except ValueError:
+            print(' >> Not a valid number!')
+            continue
+        if not isfinite(bin_min):
+            print(' >> Not a valid number!')
+            continue
+        break
+    
+    while True:
+        input_string = input('Enter maximum').strip()
+        if not input_string:
+            bin_max = 'auto'
             break
+        try:
+            bin_max = float(input_string)
+        except ValueError:
+            print(' >> Not a valid number!')
+            continue
+        if not isfinite(bin_max):
+            print(' >> Not a valid number!')
+            continue
+        break
     
     shared.temp_config['PDF_bin_number'] = bin_number
     shared.temp_config['PDF_bin_min'] = bin_min
