@@ -700,7 +700,7 @@ def function_filter_stack(source, data_limits):
             else:
                 # vector filters
                 if min_f != 'none' and max_f != 'none':
-                    filt_func = lambda dset: (np.logical_and(
+                    filt_func = lambda dset: np.logical_and(
                         min_f <= dset[name][index], dset[name][index] <= max_f)
                 elif min_f != 'none':
                     filt_func = lambda dset: (min_f <= dset[name][index])
