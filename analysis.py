@@ -347,7 +347,7 @@ def calc_PDF(data_array, weights, shared):
     bin_max = shared.temp_config['PDF_bin_max']
     if bin_min == 'auto':
         bin_min = data_array.min()
-    if bin_max = 'auto':
+    if bin_max == 'auto':
         bin_max = data_array.max()
     bin_range = (bin_min, bin_max)
     
