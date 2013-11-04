@@ -384,7 +384,7 @@ def PDF_interactive(shared):
         except ValueError:
             print(' >> Not a valid number!')
             continue
-        if not isfinite(bin_min):
+        if not np.isfinite(bin_min):
             print(' >> Not a valid number!')
             continue
         break
@@ -399,7 +399,7 @@ def PDF_interactive(shared):
         except ValueError:
             print(' >> Not a valid number!')
             continue
-        if not isfinite(bin_max):
+        if not np.isfinite(bin_max):
             print(' >> Not a valid number!')
             continue
         break
