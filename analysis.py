@@ -343,7 +343,16 @@ def calc_PDF(data_array, weights, shared):
     else:
         num_bins = bin_number
     
-    counts, bins = np.histogram(data_array, bins=num_bins, weights=weights)
+    bin_min = shared.temp_config['PDF_bin_min']
+    bin_max = shared.temp_config['PDF_bin_max']
+    if bin_min == 'auto':
+        bin_min = data_array.min()
+    if bin_max = 'auto':
+        bin_max = data_array.max()
+    bin_range = (bin_min, bin_max)
+    
+    counts, bins = np.histogram(data_array, bins=num_bins,
+                                range=bin_range, weights=weights)
     
     return [counts, bins, {}]
 
@@ -364,8 +373,40 @@ def PDF_interactive(shared):
             print('  >> Invalid number of bins!')
             continue
         break
+        
+        while True:
+            input_string = input('Enter minimum [default=auto]').strip()
+            if not input_string:
+                bin_min = 'auto'
+                break
+            try:
+                bin_min = float(input_string)
+            except ValueError:
+                print(' >> Not a valid number!')
+                continue
+            if not isfinite(bin_min):
+                print(' >> Not a valid number!')
+                continue
+            break
+        
+        while True:
+            input_string = input('Enter maximum').strip()
+            if not input_string:
+                bin_max = 'auto'
+                break
+            try:
+                bin_max = float(input_string)
+            except ValueError:
+                print(' >> Not a valid number!')
+                continue
+            if not isfinite(bin_max):
+                print(' >> Not a valid number!')
+                continue
+            break
     
     shared.temp_config['PDF_bin_number'] = bin_number
+    shared.temp_config['PDF_bin_min'] = bin_min
+    shared.temp_config['PDF_bin_max'] = bin_max
 
 
 def calc_power_spectrum(data_array, weights, shared):
