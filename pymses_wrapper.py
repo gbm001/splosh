@@ -687,7 +687,7 @@ def function_filter_stack(source, data_limits):
             name = limit['name']
             index = limit['index']
             min_f, max_f = limit['limits']
-            code_mks = field.code_mks
+            code_mks = limit['field'].code_mks
             min_f = min_f / code_mks
             max_f = max_f / code_mks
             # Determine if field is scalar or vector
