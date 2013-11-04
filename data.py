@@ -20,11 +20,11 @@ class SharedData():
         self.fields_list = []
         self.sim_step_list = []
         self.ndim = 0
-        self.last_x_axis = -5
-        self.last_time_axis = -5
-        self.last_render = -1
-        self.last_vector = -1
-        self.last_backend_index = 0
+        self.temp_config = {'last_x_axis':-5,
+                            'last_time_axis':-5,
+                            'last_render':-1,
+                            'last_vector':-1,
+                            'last_backend_index':0}
         self.config = ConfigOptions()
         self.limits = configparser.SafeConfigParser()
         self.limits.add_section('limits')
@@ -74,7 +74,8 @@ class SharedData():
             x_unit, x_unit_str = ast.literal_eval(unit_tuple_str)
         else:
             x_unit = 1.0
-        self.last_z_slice = box_max * first_step.length_mks / (2.0 * x_unit)
+        self.temp_config['last_z_slice'] = (
+            box_max * first_step.length_mks / (2.0 * x_unit))
         
         self.cmaps = plots.get_cmaps()
         

@@ -330,17 +330,17 @@ def plotting_options(y_axis, shared):
         if len(shared.sim_step_list) == 1:
             print(' >> Need more than one timestep!')
             return
-        elif shared.last_time_axis == -5:
+        elif shared.temp_config['last_time_axis'] == -5:
             prompt = 'Enter axis for time plots: '
         else:
             prompt = 'Enter axis for time plots [default={}]: '
-            prompt = prompt.format(shared.last_time_axis+1)
+            prompt = prompt.format(shared.temp_config['last_time_axis']+1)
     else:
-        if shared.last_x_axis == -5:
+        if shared.temp_config['last_x_axis'] == -5:
             prompt = 'Enter x axis (or 0 for 1D plots): '
         else:
             prompt = 'Enter x axis (or 0 for 1D plots) [default={}]: '.format(
-                shared.last_x_axis+1)
+                shared.temp_config['last_x_axis']+1)
     input_string = input(prompt).strip()
     if input_string:
         if not input_string.isdigit():
@@ -349,9 +349,9 @@ def plotting_options(y_axis, shared):
         x_axis = int(input_string) - 1
     else:
         if y_axis == -1:
-            x_axis = shared.last_time_axis
+            x_axis = shared.temp_config['last_time_axis']
         else:
-            x_axis = shared.last_x_axis
+            x_axis = shared.temp_config['last_x_axis']
     if not (-1 <= x_axis < len(shared.field_mappings)):
         print(' >> Invalid choice!')
         return
@@ -384,15 +384,15 @@ def plotting_options(y_axis, shared):
             return
         plots.plot_fields(x_axis, x_index, y_axis, y_index, None, None, None,
                           'hist2d', None, backend, shared)
-        shared.last_x_axis = x_axis
+        shared.shared.temp_config['last_x_axis'] = x_axis
         return
     
     # Ask to render
     prompt = ('Enter quantity to render (0 for none) '+
-              '[default={}]: ').format(shared.last_render+1)
+              '[default={}]: ').format(shared.temp_config['last_render']+1)
     input_string = input(prompt).strip()
     if not input_string:
-        render = shared.last_render
+        render = shared.temp_config['last_render']
     else:
         if not input_string.isdigit():
             print(' >> Invalid choice!')
@@ -409,8 +409,8 @@ def plotting_options(y_axis, shared):
             return
         plots.plot_fields(x_axis, x_index, y_axis, y_index, None, None, None,
                           'hist2d', None, backend, shared)
-        shared.last_x_axis = x_axis
-        shared.last_render = -1
+        shared.temp_config['last_x_axis'] = x_axis
+        shared.temp_config['last_render'] = -1
         return
     
     if 'position' in shared.field_mappings[render].field.flags:
@@ -429,7 +429,7 @@ def plotting_options(y_axis, shared):
         vector_fields_string = ', '.join(vector_fields)
         prompt = ('Enter vector plot quantity ({}; 0 for none)'+
                   '[default={}]: ').format(vector_fields_string,
-                                         shared.last_vector+1)
+                                         shared.temp_config['last_vector']+1)
         input_string = input(prompt).strip()
         if (not input_string) or (input_string == '0'):
             vector = None
@@ -450,11 +450,11 @@ def plotting_options(y_axis, shared):
         z_index = z_index[0]
         
         prompt = ('Enter cross-section position [default={}]: ').format(
-            shared.last_z_slice[z_index])
+            shared.temp_config['last_z_slice'][z_index])
         input_string = input(prompt).strip()
         if not input_string:
             # Use default
-            z_slice = shared.last_z_slice[z_index]
+            z_slice = shared.temp_config['last_z_slice'][z_index]
         else:
             # Attempt float conversion, check for non-insane number
             try:
@@ -465,7 +465,7 @@ def plotting_options(y_axis, shared):
             if not isfinite(z_slice):
                 print(' >> Not a valid number!')
                 return
-            shared.last_z_slice[z_index] = z_slice
+            shared.temp_config['last_z_slice'][z_index] = z_slice
     else:
         z_slice = None
         
@@ -475,10 +475,10 @@ def plotting_options(y_axis, shared):
         return
     plots.plot_fields(x_axis, x_index, y_axis, y_index, render, render_index,
                       vector, 'render', z_slice, backend, shared)
-    shared.last_x_axis = x_axis
+    shared.temp_config['last_x_axis'] = x_axis
     if vector:
-        shared.last_vector = vector
-    shared.last_render = render
+        shared.temp_config['last_vector'] = vector
+    shared.temp_config['last_render'] = render
     return
 
 
@@ -545,7 +545,6 @@ def single_axis_plotting(shared, axis):
     from . import plots
     from . import analysis
     
-    operation_list = [('PDF', analysis.calc_PDF)]
     operation_list = analysis.get_analysis_list()
     
     # Field properties
@@ -575,6 +574,11 @@ def single_axis_plotting(shared, axis):
             continue
         break
     
+    # Check for options
+    operation = tuple(operation_list[plot_choice-1])
+    if 'extra_interactive' in operation[1]:
+        operation[1]['extra_interactive'](shared)
+    
     # prompt for backend
     backend = prompt_for_backend(shared)
     if backend is None:
@@ -582,7 +586,7 @@ def single_axis_plotting(shared, axis):
     
     # move to plotting
     plots.plot_fields(axis, index, None, None, None, None,
-                      None, operation_list[plot_choice-1], None,
+                      None, operation, None,
                       backend, shared)
     return
 
@@ -595,7 +599,7 @@ def prompt_for_backend(shared):
     
     while True:
         prompt = 'Enter backend (? for list) [default={}]: '.format(
-            backend_list[shared.last_backend_index].name)
+            backend_list[shared.temp_config['last_backend_index']].name)
         input_string = input(prompt).strip()
         
         if input_string == '?' or input_string == '/?':
@@ -604,7 +608,7 @@ def prompt_for_backend(shared):
                 print('{} : {}'.format(name_str, backend.long_name))
             continue
         if not input_string:
-            return backend_list[shared.last_backend_index]
+            return backend_list[shared.temp_config['last_backend_index']]
         for backend in backend_list:
             if (input_string.upper() == backend.name.upper() or
                     input_string.upper() == backend.name.upper().lstrip('\\')):

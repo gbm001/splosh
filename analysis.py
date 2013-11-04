@@ -320,23 +320,48 @@ def get_box_data(field, index, unit, resolution, transform,
     return data_array, weights
 
 
-def calc_PDF(data_array, weights):
+def calc_PDF(data_array, weights, shared):
     import numpy as np
     
-    n = len(data_array)
-    minval, lq, uq, maxval = np.percentile(data_array,
-                                           (0.0, 25.0, 75.0, 100.0))
-    IQR = uq - lq
-    h = 2.0 * IQR / float(n)**(1.0/3.0)
+    bin_number = shared.temp_config['PDF_bin_number']
     
-    num_bins = int(np.ceil((maxval - minval) / h))
+    if bin_number == 'auto':
+        n = len(data_array)
+        minval, lq, uq, maxval = np.percentile(data_array,
+                                            (0.0, 25.0, 75.0, 100.0))
+        IQR = uq - lq
+        h = 2.0 * IQR / float(n)**(1.0/3.0)
+        
+        num_bins = int(np.ceil((maxval - minval) / h))
+    else:
+        num_bins = bin_number
     
     counts, bins = np.histogram(data_array, bins=num_bins, weights=weights)
     
     return [counts, bins, {}]
 
 
-def calc_power_spectrum(data_array, weights):
+def PDF_interactive(shared):
+    import numpy as np
+    
+    while True:
+        input_string = input('Enter number of bins [default=auto]: ').strip()
+        if not input_string or input_string=='auto':
+            bin_number = 'auto'
+            break
+        elif not input_string.isdigit():
+            print('  >> Invalid number of bins!')
+            continue
+        bin_number = int(input_string)
+        if not (2 <= bin_number <= 1e6):
+            print('  >> Invalid number of bins!')
+            continue
+        break
+    
+    shared.temp_config['PDF_bin_number'] = bin_number
+
+
+def calc_power_spectrum(data_array, weights, shared):
     import numpy as np
     
     n_tot = data_array.shape[0]
@@ -411,6 +436,7 @@ def get_analysis_list():
                  'title': 'Probability density function',
                  'data_axis': 'x',
                  'ylabel': 'Frequency density',
+                 'extra_interactive': PDF_interactive,
                  'yticks': False}
     PDF = analysis_tool(calc_PDF, PDF_props)
     analysis_list.append(PDF)

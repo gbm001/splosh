@@ -626,7 +626,7 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         else:
             raise ValueError('Unknown plot type!')
         
-        data_list = plot_type.func(data_array, weights)
+        data_list = plot_type.func(data_array, weights, shared)
         
         props = plot_type.properties
         plot_options['plot_type'] = props['plot_type']
