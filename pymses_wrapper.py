@@ -157,7 +157,7 @@ def get_code_units_guess(units, field_name):
         code_mks = (units['length'] / units['time']**2)
     else:
         print('Unknown data type: {}'.format(field_name))
-        code_mks = pymses.utils.constants.Unit((0,0,0,0,0), 1.0)
+        code_mks = pymses.utils.constants.Unit((0,0,0,0,0,0), 1.0)
     
     return code_mks
 
@@ -787,7 +787,7 @@ def add_subtract_unit(a, b):
     """
     if isinstance(a, float) :
         if isinstance(b, float):
-            return pymses.utils.constants.Unit((0,0,0,0,0), 1.0)
+            return pymses.utils.constants.Unit((0,0,0,0,0,0), 1.0)
         else:
             return b
     elif isinstance(b, float):
@@ -805,7 +805,7 @@ def multiply_unit(a, b):
     """
     if isinstance(a, float):
         if isinstance(b, float):
-            return pymses.utils.constants.Unit((0,0,0,0,0), 1.0)
+            return pymses.utils.constants.Unit((0,0,0,0,0,0), 1.0)
         else:
             return b
     elif isinstance(b, float):
@@ -820,7 +820,7 @@ def divide_unit(a, b):
     """
     if isinstance(a, float):
         if isinstance(b, float):
-            return pymses.utils.constants.Unit((0,0,0,0,0), 1.0)
+            return pymses.utils.constants.Unit((0,0,0,0,0,0), 1.0)
         else:
             return b
     elif isinstance(b, float):
