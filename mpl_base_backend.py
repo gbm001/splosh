@@ -27,6 +27,8 @@ class BackendMPL():
         self.draw_limits = None
         self.plot_transforms = None
         self.plot_options = None
+        import matplotlib
+        matplotlib.rcParams['text.usetex'] = False
     
     def on_exit(self):
         """
