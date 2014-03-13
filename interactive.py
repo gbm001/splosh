@@ -384,7 +384,7 @@ def plotting_options(y_axis, shared):
             return
         plots.plot_fields(x_axis, x_index, y_axis, y_index, None, None, None,
                           'hist2d', None, backend, shared)
-        shared.shared.temp_config['last_x_axis'] = x_axis
+        shared.temp_config['last_x_axis'] = x_axis
         return
     
     # Ask to render
