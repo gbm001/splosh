@@ -405,11 +405,11 @@ def get_sample_data(x_field, x_index, xlim,
     # Set up sampling points
     one_d_points = []
     for i in (0, 1, 2):
-        one_d_points.append(np.linspace(0.5, resolution-0.5, resolution) *
-                            box_length[i] / resolution)
+        one_d_points.append(np.linspace(0.5, resolution-0.5, resolution) /
+                            resolution)
     
     if x_pos:
-        dx = (xlim[1] - xlim[0])
+        dx = (xlim[1] - xlim[0]) / box_length[x_index]
         dx_fine = dx*fine_res
         x_max_points = min(dx_fine, resolution)
         if dx_fine < 1.0:
@@ -420,16 +420,15 @@ def get_sample_data(x_field, x_index, xlim,
         x_use = np.logical_and(xlim[0] <= x_points_full,
                                x_points_full < xlim[1])
         x_axis_points = x_points_full[x_use]
-        one_d_points[x_index] = x_axis_points * box_length[x_index]
+        one_d_points[x_index] = x_axis_points
         bins_x = np.empty(len(x_axis_points) + 1)
         bins_x[0:-1] = x_axis_points - (0.5 * x_step / fine_res)
         bins_x[-1] = x_axis_points[-1] + (0.5 * x_step / fine_res)
-        bins_x = bins_x * box_length[x_index]
     else:
         bins_x = None
     
     if y_pos:
-        dy = (ylim[1] - ylim[0])
+        dy = (ylim[1] - ylim[0]) / box_length[y_index]
         dy_fine = dy*fine_res
         y_max_points = min(dy_fine, resolution)
         if dy_fine < 1.0:
@@ -440,11 +439,10 @@ def get_sample_data(x_field, x_index, xlim,
         y_use = np.logical_and(ylim[0] <= y_points_full,
                                y_points_full < ylim[1])
         y_axis_points = y_points_full[y_use]
-        one_d_points[y_index] = y_axis_points * box_length[y_index]
+        one_d_points[y_index] = y_axis_points
         bins_y = np.empty(len(y_axis_points) + 1)
         bins_y[0:-1] = y_axis_points - (0.5 * y_step / fine_res)
         bins_y[-1] = y_axis_points[-1] + y_step / fine_res
-        bins_y = bins_y * box_length[y_index]
     else:
         bins_y = None
     
@@ -565,12 +563,12 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim,
     
     # Set up box for camera
     box_min = np.zeros_like(box_length)
-    box_max = box_length
+    box_max = np.ones_like(box_length)
     
-    box_min[x_index] = xlim[0]
-    box_max[x_index] = xlim[1]
-    box_min[y_index] = ylim[0]
-    box_max[y_index] = ylim[1]
+    box_min[x_index] = xlim[0] / box_length[x_index]
+    box_max[x_index] = xlim[1] / box_length[x_index]
+    box_min[y_index] = ylim[0] / box_length[y_index]
+    box_max[y_index] = ylim[1] / box_length[y_index]
     box_centre = (box_max + box_min) / 2.0
     box_size = (box_max - box_min)
     box_size_xy = [box_size[x_index], box_size[y_index]]
@@ -655,7 +653,7 @@ def get_region_filter(box_length, data_limits, step):
     """
     
     box_min = np.zeros_like(box_length)
-    box_max = np.array(box_length) # copy to new array
+    box_max = np.ones_like(box_length)
     region_limits = (box_min, box_max)
     
     if not 'position' in [x['name'] for x in data_limits]:
@@ -667,10 +665,10 @@ def get_region_filter(box_length, data_limits, step):
             min_limit, max_limit = limit['limits']
             if min_limit != 'none':
                 region_limits[0][index] = max(region_limits[0][index],
-                                              min_limit)
+                                              min_limit / box_length[index])
             if max_limit != 'none':
                 region_limits[1][index] = min(region_limits[1][index],
-                                              max_limit)
+                                              max_limit / box_length[index])
     
     return pymses.utils.regions.Box(region_limits)
 

@@ -59,14 +59,14 @@ def get_histogram2d(x_field, x_index, x_unit, x_pos,
     if data_list_pass is None:
         # Get data
         if x_pos:
-            xlim = (np.array(draw_limits['x_axis']) * x_unit /
-                    (step.length_mks * box_length[x_index]))
+            xlim = (np.array(draw_limits['x_axis']) * x_unit *
+                    box_length[x_index] / step.length_mks)
         else:
             xlim = None
         
         if y_pos:
-            ylim = (np.array(draw_limits['y_axis']) * y_unit /
-                    (step.length_mks * box_length[y_index]))
+            ylim = (np.array(draw_limits['y_axis']) * y_unit *
+                    box_length[y_index] / step.length_mks)
         else:
             ylim = None
         

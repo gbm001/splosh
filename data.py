@@ -40,6 +40,7 @@ class SharedData():
         from . import wrapper_functions as wf
         from . import plots
         from . import transforms
+        import numpy as np
         
         # Create the sim_list by loading the output_list directory
         for d in output_list:
@@ -65,10 +66,7 @@ class SharedData():
         
         self.transform_dict = transforms.get_transform_dict()
         
-        #self.box_limits = wf.get_box_limits(self.sim_step_list[0].data_set)
-        #box_min, box_max = self.box_limits
-        #self.last_z_slice = (box_max + box_min) / 2.0
-        box_max = wf.get_box_limits(first_step.data_set)
+        box_max = np.ones((self.ndim,))
         if self.config.has_option('units', '_position'):
             unit_tuple_str = self.config.get('units', '_position')
             x_unit, x_unit_str = ast.literal_eval(unit_tuple_str)

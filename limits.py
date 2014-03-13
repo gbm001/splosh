@@ -177,32 +177,30 @@ def snap_to_grid(xlim, ylim, x_pos, y_pos, box_length, minmax_res):
     min_cells = 4.0
     
     if x_pos:
-        dx = (xlim[1] - xlim[0]) / box_length[0]
-        idx = 1.0 / dx # box_length[0] / (xlim[1] - xlim[0])
+        xlim_sc = np.array(xlim) / box_length[0]
+        dx = xlim_sc[1] - xlim_sc[0]
+        idx = 1.0 / dx
         x_level = np.floor(np.log2(idx)).astype(int)
         x_snap = min(coarse_grid * 2**x_level, fine_grid)
-        #x_scaled = np.array(xlim) / box_length[0]
-        #x_new_lim = box_length[0] * np.rint(x_scaled * x_snap) / x_snap
-        dx_snap = box_length[0] / x_snap
-        x_min = dx_snap * np.rint(xlim[0] * x_snap / box_length[0])
+        dx_snap = 1.0 / x_snap
+        x_min = dx_snap * np.rint(xlim_sc[0] * x_snap)
         x_len = dx_snap * max(np.rint(dx * x_snap), min_cells)
-        x_min = min(x_min, box_length[0] - x_len)
-        x_new_lim = (x_min, x_min + x_len)
+        x_min = min(x_min, 1.0 - x_len)
+        x_new_lim = (x_min * box_length[0], x_min + x_len * box_length[0])
     else:
         x_new_lim = None
     
     if y_pos:
-        dy = (ylim[1] - ylim[0]) / box_length[1]
-        idy = 1.0 / dy # box_length[0] / (ylim[1] - ylim[0])
+        ylim_sc = np.array(ylim) / box_length[1]
+        dy = ylim_sc[1] - ylim_sc[0]
+        idy = 1.0 / dy
         y_level = np.floor(np.log2(idy)).astype(int)
         y_snap = min(coarse_grid * 2**y_level, fine_grid)
-        #y_scaled = np.array(ylim) / box_length[1]
-        #y_new_lim = box_length[1] * np.rint(y_scaled * y_snap) / y_snap
-        dy_snap = box_length[1] / y_snap
-        y_min = dy_snap * np.rint(ylim[0] * y_snap / box_length[1])
+        dy_snap = 1.0 / y_snap
+        y_min = dy_snap * np.rint(ylim_sc[0] * y_snap)
         y_len = dy_snap * max(np.rint(dy * y_snap), min_cells)
-        y_min = min(y_min, box_length[1] - y_len)
-        y_new_lim = (y_min, y_min + y_len)
+        y_min = min(y_min, 1.0 - y_len)
+        y_new_lim = (y_min * box_length[1], (y_min + y_len) * box_length[1])
     else:
         y_new_lim = None
     

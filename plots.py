@@ -469,13 +469,13 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     
         # find box length
         if x_pos:
-            box_len_x = step.box_length[x_pos_index] * step.length_mks
+            box_len_x = step.length_mks
             if has_x_unit:
                 box_len_x = box_len_x / x_unit
         else:
             box_len_x = None
         if y_pos:
-            box_len_y = step.box_length[y_pos_index] * step.length_mks
+            box_len_y = step.length_mks
             if has_y_unit:
                 box_len_y = box_len_y / y_unit
         else:
