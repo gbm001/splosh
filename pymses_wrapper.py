@@ -405,8 +405,8 @@ def get_sample_data(x_field, x_index, xlim,
     # Set up sampling points
     one_d_points = []
     for i in (0, 1, 2):
-        one_d_points.append(np.linspace(0.5, resolution-0.5, resolution) *
-                            box_length[i] / resolution)
+        one_d_points.append(np.linspace(0.5, resolution-0.5, resolution) /
+                            resolution)
     
     if x_pos:
         dx = (xlim[1] - xlim[0]) / box_length[x_index]
@@ -654,11 +654,7 @@ def get_region_filter(box_length, data_limits, step):
     Create a region filter based on boxlen and data_limits
     """
     
-    #region_limits = [np.array([0.0, 0.0, 0.0]), np.array([100.0, 100.0, 100.0])] # DELETE ME
-    #return pymses.utils.regions.Box(region_limits) # DELETE ME
-    
     box_min = np.zeros_like(box_length)
-    #box_max = np.ones_like(box_length)
     box_max = np.array(box_length)
     region_limits = (box_min, box_max)
     
