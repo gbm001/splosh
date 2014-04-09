@@ -405,8 +405,8 @@ def get_sample_data(x_field, x_index, xlim,
     # Set up sampling points
     one_d_points = []
     for i in (0, 1, 2):
-        one_d_points.append(np.linspace(0.5, resolution-0.5, resolution) /
-                            resolution)
+        one_d_points.append(np.linspace(0.5, resolution-0.5, resolution) *
+                            box_length[i] / resolution)
     
     if x_pos:
         dx = (xlim[1] - xlim[0]) / box_length[x_index]
@@ -563,6 +563,7 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim,
     
     # Set up box for camera
     box_min = np.zeros_like(box_length)
+    #box_max = np.array(box_length)
     box_max = np.ones_like(box_length)
     
     box_min[x_index] = xlim[0] / box_length[x_index]
@@ -635,6 +636,7 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim,
                                  multiprocessing=multiprocessing)
     else:
         # Slice map
+        z_slice = z_slice / box_length[z_axis]
         cam = Camera(center=box_centre, line_of_sight_axis=z_axis_name,
                     region_size=box_size_xy, up_vector=up_axis_name,
                     map_max_size=resolution, log_sensitive=False)
@@ -652,8 +654,12 @@ def get_region_filter(box_length, data_limits, step):
     Create a region filter based on boxlen and data_limits
     """
     
+    #region_limits = [np.array([0.0, 0.0, 0.0]), np.array([100.0, 100.0, 100.0])] # DELETE ME
+    #return pymses.utils.regions.Box(region_limits) # DELETE ME
+    
     box_min = np.zeros_like(box_length)
-    box_max = np.ones_like(box_length)
+    #box_max = np.ones_like(box_length)
+    box_max = np.array(box_length)
     region_limits = (box_min, box_max)
     
     if not 'position' in [x['name'] for x in data_limits]:
@@ -665,10 +671,10 @@ def get_region_filter(box_length, data_limits, step):
             min_limit, max_limit = limit['limits']
             if min_limit != 'none':
                 region_limits[0][index] = max(region_limits[0][index],
-                                              min_limit / box_length[index])
+                                              min_limit)
             if max_limit != 'none':
                 region_limits[1][index] = min(region_limits[1][index],
-                                              max_limit / box_length[index])
+                                              max_limit)
     
     return pymses.utils.regions.Box(region_limits)
 

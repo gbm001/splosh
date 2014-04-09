@@ -214,10 +214,10 @@ def get_render_plot(x_field, x_index, x_unit,
         if (x_unit != y_unit):
             raise ValueError('different units on coordinate axes!')
         
-        xlim = (np.array(draw_limits['x_axis']) * x_unit /
-                    (step.length_mks * box_length[x_index]))
-        ylim = (np.array(draw_limits['y_axis']) * y_unit /
-                    (step.length_mks * box_length[y_index]))
+        xlim = (np.array(draw_limits['x_axis']) * x_unit *
+                    box_length[x_index] / step.length_mks)
+        ylim = (np.array(draw_limits['y_axis']) * y_unit *
+                    box_length[y_index] / step.length_mks)
         
         # Get grid data WITHOUT render_transform: transform later
         grid_data = wf.get_grid_data(
