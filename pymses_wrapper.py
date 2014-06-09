@@ -430,7 +430,7 @@ def get_sample_data(x_field, x_index, xlim,
     
     if y_pos:
         ylim_sc = ylim / box_length[y_index]
-        dy = ylim[1] - ylim[0])
+        dy = ylim_sc[1] - ylim_sc[0]
         dy_fine = dy*fine_res
         y_max_points = min(dy_fine, resolution)
         if dy_fine < 1.0:
