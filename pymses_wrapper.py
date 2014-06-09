@@ -409,7 +409,8 @@ def get_sample_data(x_field, x_index, xlim,
                             resolution)
     
     if x_pos:
-        dx = (xlim[1] - xlim[0]) / box_length[x_index]
+        xlim_sc = xlim / box_length[x_index]
+        dx = xlim_sc[1] - xlim_sc[0]
         dx_fine = dx*fine_res
         x_max_points = min(dx_fine, resolution)
         if dx_fine < 1.0:
@@ -417,8 +418,8 @@ def get_sample_data(x_field, x_index, xlim,
         x_step = int(2.0**np.ceil(np.log2(dx_fine/x_max_points)))
         x_res = fine_res / x_step
         x_points_full = np.linspace(0.5, x_res-0.5, x_res) * x_step / fine_res
-        x_use = np.logical_and(xlim[0] <= x_points_full,
-                               x_points_full < xlim[1])
+        x_use = np.logical_and(xlim_sc[0] <= x_points_full,
+                               x_points_full < xlim_sc[1])
         x_axis_points = x_points_full[x_use]
         one_d_points[x_index] = x_axis_points
         bins_x = np.empty(len(x_axis_points) + 1)
@@ -428,7 +429,8 @@ def get_sample_data(x_field, x_index, xlim,
         bins_x = None
     
     if y_pos:
-        dy = (ylim[1] - ylim[0]) / box_length[y_index]
+        ylim_sc = ylim / box_length[y_index]
+        dy = ylim[1] - ylim[0])
         dy_fine = dy*fine_res
         y_max_points = min(dy_fine, resolution)
         if dy_fine < 1.0:
@@ -436,8 +438,8 @@ def get_sample_data(x_field, x_index, xlim,
         y_step = int(2.0**np.ceil(np.log2(dy_fine/y_max_points)))
         y_res = fine_res / x_step
         y_points_full = np.linspace(0.5, y_res-0.5, y_res) * y_step / fine_res
-        y_use = np.logical_and(ylim[0] <= y_points_full,
-                               y_points_full < ylim[1])
+        y_use = np.logical_and(ylim_sc[0] <= y_points_full,
+                               y_points_full < ylim_sc[1])
         y_axis_points = y_points_full[y_use]
         one_d_points[y_index] = y_axis_points
         bins_y = np.empty(len(y_axis_points) + 1)

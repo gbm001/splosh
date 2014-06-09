@@ -186,7 +186,7 @@ def snap_to_grid(xlim, ylim, x_pos, y_pos, box_length, minmax_res):
         x_min = dx_snap * np.rint(xlim_sc[0] * x_snap)
         x_len = dx_snap * max(np.rint(dx * x_snap), min_cells)
         x_min = min(x_min, 1.0 - x_len)
-        x_new_lim = (x_min * box_length[0], x_min + x_len * box_length[0])
+        x_new_lim = (x_min * box_length[0], (x_min + x_len) * box_length[0])
     else:
         x_new_lim = None
     

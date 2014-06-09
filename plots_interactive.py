@@ -94,12 +94,6 @@ def mouse_zoom_main(backend, xlim, ylim):
     else:
         backend.plot_args['plot_limits']['y_axis'] = y_transform[1](ylim)
     config = backend.plot_args['shared'].config
-    if config.get('render', 'resolution') == 'auto':
-        x_pos = backend.plot_options['x_pos']
-        y_pos = backend.plot_options['y_pos']
-        box_length = backend.plot_options['box_length']
-        xlim, ylim = limits.snap_to_grid(xlim, ylim, x_pos, y_pos, box_length,
-                                         backend.plot_options['minmax_res'])
     plots.update_plot_data(backend)
 
 
