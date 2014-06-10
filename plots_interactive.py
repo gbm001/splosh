@@ -139,7 +139,9 @@ def key_log(backend, axes_name, *args):
     if plot_type == 'render':
         key = 'render_transform'
     else:
-        if axes_name == 'main_axes':
+        if not axes_name:
+            return
+        elif axes_name == 'main_axes':
             if plot_type in ['hist2d', 'time']:
                 key = 'y_transform'
             else:
