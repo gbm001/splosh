@@ -103,6 +103,18 @@ def get_histogram2d(x_field, x_index, x_unit, x_pos,
             x[:] = x_transform[0](x)
         if (not y_pos) and (y_transform is not None):
             y[:] = y_transform[0](y)
+        
+        # Check for invalid data
+        if (not np.isfinite(np.sum(x))) or (not np.isfinite(np.sum(y))):
+            print('Warning - invalidly transformed data skipped!')
+            x_mask = np.isfinite(x)
+            y_mask = np.isfinite(y)
+            mask_values = np.logical_and(x_mask, y_mask)
+            if not np.any(mask_values):
+                raise ValueError('No valid values remaining!')
+            x = x[mask_values]
+            y = y[mask_values]
+            weights = weights[mask_values]
     
         min_max_data = {}
         min_max_data['x_min'] = x.min()
