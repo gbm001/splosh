@@ -20,7 +20,7 @@ def set_current_limits(x_axis, y_axis, render, vector, plot_limits, shared):
         # existing limits
         limits_string = shared.limits.get('limits', x_title)
         old_x_limits = ast.literal_eval(limits_string)
-        if not np.allclose(old_x_limits != plot_limits['x_axis']):
+        if not np.allclose(old_x_limits, plot_limits['x_axis']):
             # set new limits
             shared.limits.set('limits', x_title, repr(plot_limits['x_axis']))
             coord_changed = True
