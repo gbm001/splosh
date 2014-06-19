@@ -436,7 +436,7 @@ def get_sample_data(x_field, x_index, xlim,
         if dy_fine < 1.0:
             raise ValueError('too small to sample!')
         y_step = int(2.0**np.ceil(np.log2(dy_fine/y_max_points)))
-        y_res = fine_res / x_step
+        y_res = fine_res / y_step
         y_points_full = np.linspace(0.5, y_res-0.5, y_res) * y_step / fine_res
         y_use = np.logical_and(ylim_sc[0] <= y_points_full,
                                y_points_full < ylim_sc[1])
