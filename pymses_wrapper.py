@@ -698,8 +698,10 @@ def function_filter_stack(source, data_limits):
             index = limit['index']
             min_f, max_f = limit['limits']
             code_mks = limit['field'].code_mks
-            min_f = min_f / code_mks
-            max_f = max_f / code_mks
+            if min_f != 'none':
+                min_f = min_f / code_mks
+            if max_f != 'none':
+                max_f = max_f / code_mks
             # Determine if field is scalar or vector
             if limit['width'] == 1:
                 # scalar filters

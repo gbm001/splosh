@@ -147,7 +147,7 @@ def get_current_limits(x_axis, x_index, y_axis, y_index, render,
             f_title = shared.field_mappings[i].title
             if shared.limits.has_option('restrict', f_title):
                 f_limits_str = shared.limits.get('restrict', f_title)
-                f_limits = ast.literal_eval(f_limits_str)
+                f_limits = list(ast.literal_eval(f_limits_str))
                 field = shared.field_mappings[i].field
                 f_name = shared.field_mappings[i].field.name
                 f_index = shared.field_mappings[i].index
@@ -156,7 +156,10 @@ def get_current_limits(x_axis, x_index, y_axis, y_index, render,
                         shared.config.has_option('units', '_' + field.name)):
                     unit_tuple_str = shared.config.get('units', '_'+field.name)
                     unit, unit_str = ast.literal_eval(unit_tuple_str)
-                    f_limits = (f_limits[0]*unit, f_limits[1]*unit)
+                    if f_limits[0] != 'none':
+                        f_limits[0] = f_limits[0] * unit
+                    if f_limits[1] != 'none':
+                        f_limits[1] = f_limits[1] * unit
                 data_limits.append({'name': f_name,
                                     'field': field,
                                     'index': f_index,
