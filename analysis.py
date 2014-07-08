@@ -344,8 +344,10 @@ def calc_PDF(data_array, weights, shared):
     
     bin_number = shared.temp_config['PDF_bin_number']
     
-    if bin_number == 'auto':
-        n = len(data_array)
+    n = len(data_array)
+    if n == 0:
+        return [None, None, {}]
+    elif bin_number == 'auto':
         minval, lq, uq, maxval = np.percentile(data_array,
                                             (0.0, 25.0, 75.0, 100.0))
         IQR = uq - lq

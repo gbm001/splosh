@@ -150,28 +150,40 @@ class BackendMPL():
             if plot_type == 'hist1d':
                 counts, bins, extra_info = self.data_list
                 
-                if qy_transform is not None:
-                    counts = qy_transform[0](counts)
-                
-                npoints = 2 * len(bins)
-                x = np.zeros(npoints)
-                y = np.zeros(npoints)
-                
-                x[0::2], x[1::2] = bins, bins
-                y[0] = 0.0
-                i = 1
-                for j, count in enumerate(counts):
-                    y[i] = count
-                    y[i+1] = count
-                    i += 2
-                y[-1] = 0.0
-                
-                single_axis_plot = ax.plot(x, y, 'k')
-                
-                xlim = ax.get_xlim()
-                ylim = ax.get_ylim()
-                self.current_xylimits = [xlim, ylim]
-                clim = None
+                if (counts is None) or (bins is None):
+                    # empty plot
+                    x = []
+                    y = []
+                    xlim = [0.0, 1.0]
+                    ylim = [0.0, 1.0]
+                    single_axis_plot = ax.plot(x, y)
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
+                    self.current_xylimits = [xlim, ylim]
+                    clim = None
+                else:
+                    if qy_transform is not None:
+                        counts = qy_transform[0](counts)
+                    
+                    npoints = 2 * len(bins)
+                    x = np.zeros(npoints)
+                    y = np.zeros(npoints)
+                    
+                    x[0::2], x[1::2] = bins, bins
+                    y[0] = 0.0
+                    i = 1
+                    for j, count in enumerate(counts):
+                        y[i] = count
+                        y[i+1] = count
+                        i += 2
+                    y[-1] = 0.0
+                    
+                    single_axis_plot = ax.plot(x, y, 'k')
+                    
+                    xlim = ax.get_xlim()
+                    ylim = ax.get_ylim()
+                    self.current_xylimits = [xlim, ylim]
+                    clim = None
             
             elif plot_type == 'power_spectrum':
                 
