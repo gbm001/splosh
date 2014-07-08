@@ -35,7 +35,7 @@ def set_units(shared, *args):
         input_string = input(prompt).strip()
         if not input_string:
             return
-        if not input_string == '-1' or input_string.isdigit():
+        if not (input_string == '-1' or input_string.isdigit()):
             print(' >> Invalid input string!')
             continue
         unit_index = int(input_string)
