@@ -453,21 +453,41 @@ def get_sample_data(x_field, x_index, xlim,
     for limit in data_limits:
         if limit['name'] == 'position':
             index = limit['index']
+            code_mks = limit['field'].code_mks
             min_limit, max_limit = limit['limits']
+            if min_limit != 'none':
+                min_limit = min_limit / code_mks
+            if max_limit != 'none':
+                max_limit = max_limit / code_mks
             if index==0:
-                x_points = x_points[np.logical_and(x_points >= min_limit,
-                                                   x_points <= max_limit)]
-                if len(x_points == 0):
+                if min_limit == 'none':
+                    x_points = x_points[x_points <= max_limit]
+                elif max_limit == 'none':
+                    x_points = x_points[x_points >= min_limit]
+                else:
+                    x_points = x_points[np.logical_and(x_points >= min_limit,
+                                                       x_points <= max_limit)]
+                if len(x_points) == 0:
                     raise ValueError('Data limits on x axis too restrictive!')
             elif index==1:
-                y_points = y_points[np.logical_and(y_points >= min_limit,
-                                                   y_points <= max_limit)]
-                if len(y_points == 0):
+                if min_limit == 'none':
+                    y_points = y_points[y_points <= max_limit]
+                elif max_limit == 'none':
+                    y_points = y_points[y_points >= min_limit]
+                else:
+                    y_points = y_points[np.logical_and(y_points >= min_limit,
+                                                       y_points <= max_limit)]
+                if len(y_points) == 0:
                     raise ValueError('Data limits on y axis too restrictive!')
             elif index==2:
-                z_points = z_points[np.logical_and(z_points >= min_limit,
-                                                   z_points <= max_limit)]
-                if len(z_points == 0):
+                if min_limit == 'none':
+                    z_points = z_points[z_points <= max_limit]
+                elif max_limit == 'none':
+                    z_points = z_points[z_points >= min_limit]
+                else:
+                    z_points = z_points[np.logical_and(z_points >= min_limit,
+                                                       z_points <= max_limit)]
+                if len(z_points) == 0:
                     raise ValueError('Data limits on z axis too restrictive!')
     
     points = np.vstack(np.meshgrid(x_points,
@@ -484,6 +504,7 @@ def get_sample_data(x_field, x_index, xlim,
                            # properly unless you have add_cell_center=True even
                            # if you don't use it
     
+    # Clean up some memory
     step.data_set = None
     gc.collect()
     
@@ -523,6 +544,45 @@ def get_sample_data(x_field, x_index, xlim,
                     y_data_view[:] = sampled_dset[y_field.name]
                 else:
                     y_data_view[:] = sampled_dset[y_field.name][:, y_index]
+    
+        # Filter data_set, replacing data of interest with nan wherever the
+        # data is outside limits
+        value_limits = [x for x in data_limits if x['name'] != 'position']
+        if value_limits:
+            mask = np.empty_like(x_data_view, np.bool_)
+            mask[:] = True
+            for limit in value_limits:
+                name = limit['name']
+                index = limit['index']
+                min_f, max_f = limit['limits']
+                code_mks = limit['field'].code_mks
+                if min_f != 'none':
+                    min_f = min_f / code_mks
+                if max_f != 'none':
+                    max_f = max_f / code_mks
+                print('limit: ', min_f, max_f)
+                # Determine if field is scalar or vector
+                if limit['width'] == 1:
+                    # scalar filters
+                    if min_f != 'none' and max_f != 'none':
+                        filt_func = lambda dset: np.logical_and(min_f <= dset[name],
+                                                dset[name] <= max_f)
+                    elif min_f != 'none':
+                        filt_func = lambda dset: (min_f <= dset[name])
+                    elif max_f != 'none':
+                        filt_func = lambda dset: (dset[name] <= max_f)
+                else:
+                    # vector filters
+                    if min_f != 'none' and max_f != 'none':
+                        filt_func = lambda dset: np.logical_and(
+                            min_f <= dset[name][index], dset[name][index] <= max_f)
+                    elif min_f != 'none':
+                        filt_func = lambda dset: (min_f <= dset[name][index])
+                    elif max_f != 'none':
+                        filt_func = lambda dset: (dset[name][index] <= max_f)
+                mask = np.logical_and(mask, filt_func(sampled_dset))
+            x_data_view[mask] = float('nan')
+            y_data_view[mask] = float('nan')
     
     if mass_weighted:
         weights = sampled_dset['rho']
