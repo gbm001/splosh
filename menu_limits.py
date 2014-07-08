@@ -72,7 +72,7 @@ def set_limits(shared, config_section, limit_type):
                 continue
             break
         
-        if new_limit_left == default_string:
+        if (new_limit_left == default_string) and (limit_type=='plot'):
             new_limits = (default_string, default_string)
         else:
             prompt = "Enter maximum value [default={}]: ".format(limits[1])
@@ -80,6 +80,9 @@ def set_limits(shared, config_section, limit_type):
                 input_string = input(prompt).strip()
                 if not input_string:
                     new_limit_right = limits[1]
+                    break
+                elif (limit_type == 'data' and input_string == default_string):
+                    new_limit_right = default_string
                     break
                 try:
                     new_limit_right = float(input_string)
@@ -90,14 +93,23 @@ def set_limits(shared, config_section, limit_type):
                     print(' >> Not a valid number!')
                     continue
                 break
-            if new_limit_right <= new_limit_left:
+            if (new_limit_left == default_string or
+                    new_limit_right == default_string):
+                pass
+            elif new_limit_right <= new_limit_left:
                 print(' >> Limits are not valid! (min >= max)')
                 continue
             new_limits = (new_limit_left, new_limit_right)
         
         # Save new limits to limits configparser
-        limits_str = repr(new_limits)
-        shared.limits.set(limits_section, fm.title, limits_str)
+        if (new_limit_left == default_string and
+                new_limit_right == default_string):
+            # Default limits now, so remove from configparser
+            if shared.limits.has_option(limits_section, fm.title):
+                shared.limits.remove_option(limits_section, fm.title)
+        else:
+            limits_str = repr(new_limits)
+            shared.limits.set(limits_section, fm.title, limits_str)
     
     return
 
