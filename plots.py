@@ -611,7 +611,8 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         
         ret_tuple = ([time, cell_data, weights], plot_options)
     else:
-        
+        # Data for general-purpose analysis function; see get_analysis_list
+        # in analysis.py
         if plot_type.properties['data_type'] == 'cell_data':
         
             data_array, weights = analysis.get_single_data(

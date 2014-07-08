@@ -224,7 +224,7 @@ class BackendMPL():
                     extra_plots.append(extra_plot)
                 
                 if legend:
-                    ax.legend(loc='lower left')
+                    ax.legend(loc='center right')
                 clim = None
             else:
                 raise ValueError('Unknown plot type!')
