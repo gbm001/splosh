@@ -288,12 +288,9 @@ def get_cell_data(x_field, x_index, y_field, y_index,
     if mass_weighted and not 'rho' in field_list:
         field_list.append('rho')
     
-    # Get min/max region from boxlen
-    box_length = step.box_length
-    
     # Load data, running through box filter and then creating point dataset
     amr = step.data_set.amr_source(field_list)
-    region = get_region_filter(box_length, data_limits, step)
+    region = get_region_filter(data_limits, step)
     amr_region = pymses.filters.RegionFilter(region, amr)
     cell_source = pymses.filters.CellsToPoints(amr_region)
     
@@ -452,20 +449,36 @@ def get_sample_data(x_field, x_index, xlim,
     y_points = one_d_points[1]
     z_points = one_d_points[2]
     
+    # Filter sampling points by data limits
+    for limit in data_limits:
+        if limit['name'] == 'position':
+            index = limit['index']
+            min_limit, max_limit = limit['limits']
+            if index==0:
+                x_points = x_points[np.logical_and(x_points >= min_limit,
+                                                   x_points <= max_limit)]
+                if len(x_points == 0):
+                    raise ValueError('Data limits on x axis too restrictive!')
+            elif index==1:
+                y_points = y_points[np.logical_and(y_points >= min_limit,
+                                                   y_points <= max_limit)]
+                if len(y_points == 0):
+                    raise ValueError('Data limits on y axis too restrictive!')
+            elif index==2:
+                z_points = z_points[np.logical_and(z_points >= min_limit,
+                                                   z_points <= max_limit)]
+                if len(z_points == 0):
+                    raise ValueError('Data limits on z axis too restrictive!')
+    
     points = np.vstack(np.meshgrid(x_points,
                                    y_points,
                                    z_points)).reshape(3,-1).T
     
-    # Load data, running through box filter and then creating point dataset
+    # Load data, then creating point dataset
     amr = step.data_set.amr_source(field_list)
-    region = get_region_filter(box_length, data_limits, step)
-    amr_region = pymses.filters.RegionFilter(region, amr)
-    
-    # Now, construct function filter stack
-    filter_stack = function_filter_stack(amr_region, data_limits)
     
     # Calculate sampled points
-    sampled_dset = pymses.analysis.sample_points(filter_stack[-1], points,
+    sampled_dset = pymses.analysis.sample_points(amr, points,
                                                  add_cell_center=True)
                            # NOTE stupid bug in pymses means this doesn't work
                            # properly unless you have add_cell_center=True even
@@ -558,7 +571,7 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim,
     
     # Load data, running through box filter and then creating point dataset
     amr = step.data_set.amr_source(field_list)
-    region = get_region_filter(box_length, data_limits, step)
+    region = get_region_filter(data_limits, step)
     amr_region = pymses.filters.RegionFilter(region, amr)
     
     # Now, construct function filter stack
@@ -659,13 +672,15 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim,
     return mapped_data.T
 
 
-def get_region_filter(box_length, data_limits, step):
+def get_region_filter(data_limits, step):
     """
     Create a region filter based on boxlen and data_limits
     """
     
-    box_min = np.zeros_like(box_length)
-    box_max = np.array(box_length)
+    # Region filter seems to want positions 0 -> 1
+    
+    box_min = np.zeros_like(step.box_length)
+    box_max = np.ones_like(box_min)
     region_limits = (box_min, box_max)
     
     if not 'position' in [x['name'] for x in data_limits]:
@@ -675,6 +690,11 @@ def get_region_filter(box_length, data_limits, step):
         if limit['name'] == 'position':
             index = limit['index']
             min_limit, max_limit = limit['limits']
+            code_mks = limit['field'].code_mks
+            if min_limit != 'none':
+                min_limit = min_limit / code_mks
+            if max_limit != 'none':
+                max_limit = max_limit / code_mks
             if min_limit != 'none':
                 region_limits[0][index] = max(region_limits[0][index],
                                               min_limit)
