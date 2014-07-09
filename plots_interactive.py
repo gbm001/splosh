@@ -195,21 +195,61 @@ def key_save(backend, axes_name, x, y, key, info):
         config.set('render', 'cmap_invert', plot_args['cmap_invert'])
     
     plot_type = backend.plot_options['plot_type']
-    short_only = plot_type not in ['hist2d', 'render']
-    if key == 's' or short_only:
+    if key == 's':
+        # Save plot options only
         print('Plot options saved to memory')
         return
-    # and limits:
     x_axis = plot_args['x_axis']
     y_axis = plot_args['y_axis']
     render = plot_args['render']
     vector = plot_args['vector']
-    plot_limits = plot_args['plot_limits']
+    plot_limits = dict(plot_args['plot_limits'])
     shared = plot_args['shared']
+    x_transform = backend.plot_transforms['x_transform']
+    y_transform = backend.plot_transforms['y_transform']
+    render_transform = backend.plot_transforms['render_transform']
     
-    limits.set_current_limits(x_axis, y_axis, render,
-                              vector, plot_limits, shared)
-    print('Plot options and limits saved to memory')
+    # Get current limits, apply appropriate transforms
+    x_min, x_max = backend.current_xylimits[0]
+    if x_min != 'auto' and x_transform is not None:
+        x_min = x_transform[1](x_min)
+    if x_max != 'auto' and x_transform is not None:
+        x_max = x_transform[1](x_max)
+    
+    y_min, y_max = backend.current_xylimits[1]
+    if y_min != 'auto' and y_transform is not None:
+        y_min = y_transform[1](y_min)
+    if y_max != 'auto' and y_transform is not None:
+        y_max = y_transform[1](y_max)
+    
+    r_min, r_max = backend.current_clim
+    if r_min != 'auto' and r_transform is not None:
+        r_min = r_transform[1](r_min)
+    if r_max != 'auto' and y_transform is not None:
+        r_max = r_transform[1](r_max)
+    
+    if axes_name == 'main_axes':
+        plot_limits['x_axis'] = [x_min, x_max]
+        plot_limits['y_axis'] = [y_min, y_max]
+        print('Plot options and x/y limits saved to memory')
+    elif axes_name == 'x-axis':
+        plot_limits['x_axis'] = [x_min, x_max]
+        print('Plot options and x axis limits saved to memory')
+    elif axes_name == 'y-axis':
+        plot_limits['y_axis'] = [y_min, y_max]
+        print('Plot options and y axis limits saved to memory')
+    elif axes_name == 'cbar':
+        plot_limits['render'] = [r_min, r_max]
+        print('Plot options and colourbar limits saved to memory')
+    else:
+        plot_limits['x_axis'] = [r_min, r_max]
+        plot_limits['y_axis'] = [r_min, r_max]
+        if plot_args['render'] is not None:
+            plot_limits['render'] = [r_min, r_max]
+        print('Plot options and limits saved to memory')
+    
+    limits.set_current_limits(x_axis, y_axis, render, vector,
+                              plot_limits, plot_type, shared)
 
 
 def key_print_position(backend, axes_name, x, y, key, info):
@@ -412,11 +452,11 @@ def key_zoom(backend, axes_name, x, y, key, info):
         aspect_protection = False
     if info=='auto':
         if zoom_x:
-            plot_limits['x_axis'] = ('auto', 'auto')
+            plot_limits['x_axis'] = ['auto', 'auto']
         if zoom_y:
-            plot_limits['y_axis'] = ('auto', 'auto')
+            plot_limits['y_axis'] = ['auto', 'auto']
         if zoom_c:
-            plot_limits['render'] = ('auto', 'auto')
+            plot_limits['render'] = ['auto', 'auto']
     else:
         base_zoom = float(backend.zoom_factor * backend.zoom_mult)
         zoom_cycle = 4.0 # zooms to double
@@ -438,7 +478,6 @@ def key_zoom(backend, axes_name, x, y, key, info):
             if x_max == 'auto':
                 x_max = backend.current_xylimits[0][1]
                 if x_transform is not None:
-                    x_transform = backend.plot_transforms['x_transform']
                     x_max = x_transform[1](x_max)
             x_centre = (x_min + x_max) / 2.0
             if x_pos:

@@ -52,7 +52,7 @@ def plot_fields(x_axis, x_index, y_axis, y_index, render, render_index,
             # Find limits
             plot_limits, data_limits = limits.get_current_limits(
                 x_axis, x_index, y_axis, y_index, render, render_index, vector,
-                shared)
+                plot_type, shared)
             
             # Find transforms
             transform_keys, plot_transforms = transforms.get_plot_transforms(
@@ -94,7 +94,7 @@ def plot_fields(x_axis, x_index, y_axis, y_index, render, render_index,
         # Find limits
         plot_limits, data_limits = limits.get_current_limits(
             x_axis, x_index, y_axis, y_index, render, render_index, vector,
-            shared)
+            plot_type, shared)
         
         # Find transforms
         transform_keys, plot_transforms = transforms.get_plot_transforms(
@@ -150,7 +150,7 @@ def plot_time(axis, index, time_operation, backend, shared):
     
     # Find limits
     plot_limits, data_limits = limits.get_current_limits(
-        None, None, axis, index, None, None, None, shared)
+        None, None, axis, index, None, None, None, 'time', shared)
     
     # Find transforms
     transform_keys, plot_transforms = transforms.get_plot_transforms(
@@ -606,7 +606,8 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         data_list = plot_type.func(data_array, weights, shared)
         
         props = plot_type.properties
-        plot_options['plot_type'] = props['plot_type']
+        plot_options['plot_type'] = plot_type
+        #plot_options['plot_type'] = props['plot_type']
         if 'title' in props:
             plot_options['title'] = props['title']
         if 'xlabel' in props:
@@ -633,16 +634,19 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         else:
             plot_options['data_axis'] = None
         
-        draw_limits['xy_limits'] = None
+        draw_limits['xy_limits'] = [None, None]
         
         if plot_options['data_axis'] != 'x':
             qx_transform = plot_transforms['qx_transform']
         else:
             qx_transform = None
+            draw_limits['xy_limits'][0] = plot_limits['x_axis']
+        
         if plot_options['data_axis'] != 'y':
             qy_transform = plot_transforms['qy_transform']
         else:
             qy_transform = None
+            draw_limits['xy_limits'][1] = plot_limits['y_axis']
         
         if qx_transform is None:
             pass

@@ -81,6 +81,7 @@ class BackendMPL():
         
         limits = self.draw_limits['xy_limits']
         self.current_xylimits = limits
+        self.current_clim = ['auto', 'auto']
         
         # Create figure
         ax = self.fig.add_subplot(111)
@@ -147,7 +148,7 @@ class BackendMPL():
             else:
                 qy_transform = None
             
-            if plot_type == 'hist1d':
+            if plot_type.properties['plot_type'] == 'hist1d':
                 counts, bins, extra_info = self.data_list
                 
                 if (counts is None) or (bins is None):
@@ -180,16 +181,26 @@ class BackendMPL():
                     
                     single_axis_plot = ax.plot(x, y, 'k')
                     
+                    if 'xlim' in extra_info:
+                        ax.set_xlim(extra_info['xlim'])
+                    if 'ylim' in extra_info:
+                        ax.set_ylim(extra_info['ylim'])
+                    
+                    print('limits: ', limits)
+                    
+                    if limits is not None:
+                        if limits[0] is not None:
+                            ax.set_xlim(limits[0])
+                        if limits[1] is not None:
+                            ax.set_ylim(limits[1])
+                    
                     xlim = ax.get_xlim()
                     ylim = ax.get_ylim()
                     self.current_xylimits = [xlim, ylim]
                     clim = None
             
-            elif plot_type == 'power_spectrum':
-                
-                x = self.data_list[0]
-                y = self.data_list[1]
-                extra_info = self.data_list[2]
+            elif plot_type.properties['plot_type'] == 'power_spectrum':
+                x, y, extra_info = self.data_list
                 
                 if qx_transform is not None:
                     x = qx_transform[0](x)
@@ -227,7 +238,9 @@ class BackendMPL():
                     ax.legend(loc='center right')
                 clim = None
             else:
-                raise ValueError('Unknown plot type!')
+                print('Backend does not support plot type: ',
+                      plot_type.properties['plot_type'])
+                raise ValueError()
         
         if clim is not None:
             self.current_clim = clim

@@ -13,6 +13,7 @@ except NameError:
 class analysis_tool():
     def __init__(self, func, properties=None):
         self.func = func
+        self.limits = [['auto', 'auto'], ['auto', 'auto']]
         if properties is not None:
             self.properties = properties
         else:
@@ -381,14 +382,19 @@ def get_box_data(field, index, unit, resolution, transform,
 def calc_PDF(data_array, weights, shared):
     import numpy as np
     
-    bin_number = shared.temp_config['PDF_bin_number']
+    extra_info = {}
     
+    bin_number = shared.temp_config['PDF_bin_number']
     n = len(data_array)
     if n == 0:
         return [None, None, {}]
+    
+    minval, lq, uq, maxval = np.percentile(data_array,
+                                           (0.0, 25.0, 75.0, 100.0))
+    
+    if minval == maxval:
+        num_bins = 1
     elif bin_number == 'auto':
-        minval, lq, uq, maxval = np.percentile(data_array,
-                                            (0.0, 25.0, 75.0, 100.0))
         IQR = uq - lq
         h = 2.0 * IQR / float(n)**(1.0/3.0)
         
@@ -404,10 +410,16 @@ def calc_PDF(data_array, weights, shared):
         bin_max = data_array.max()
     bin_range = (bin_min, bin_max)
     
-    counts, bins = np.histogram(data_array, bins=num_bins,
-                                range=bin_range, weights=weights)
+    if (bin_min == bin_max) and (num_bins == 1):
+        counts = np.array([1.0])
+        bins = np.array([bin_min*0.99999, bin_max*1.00001])
+        extra_info['xlim'] = [0.0, bin_max*2.0]
+        extra_info['ylim'] = [0.0, 1.3]
+    else:
+        counts, bins = np.histogram(data_array, bins=num_bins,
+                                    range=bin_range, weights=weights)
     
-    return [counts, bins, {}]
+    return [counts, bins, extra_info]
 
 
 def PDF_interactive(shared):
@@ -534,6 +546,7 @@ def get_analysis_list():
                  'file_ext': 'PDF',
                  'data_type': 'cell_data',
                  'plot_type': 'hist1d',
+                 'special_limits': [False, True],
                  'title': 'Probability density function',
                  'data_axis': 'x',
                  'ylabel': 'Frequency density',
@@ -546,6 +559,7 @@ def get_analysis_list():
                             'file_ext': 'powerspec',
                             'data_type': 'sample_data',
                             'plot_type': 'power_spectrum',
+                            'special_limits': [True, True],
                             'title': 'Power spectrum',
                             'data_axis': None,
                             'xlabel': 'Wavenumber',

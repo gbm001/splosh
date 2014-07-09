@@ -6,7 +6,8 @@ import ast
 import numpy as np
 
 
-def set_current_limits(x_axis, y_axis, render, vector, plot_limits, shared):
+def set_current_limits(x_axis, y_axis, render, vector,
+                       plot_limits, plot_type, shared):
     """
     Given a set of limits from a current plot, save to config
     """
@@ -14,39 +15,54 @@ def set_current_limits(x_axis, y_axis, render, vector, plot_limits, shared):
     coord_changed = False
     quantity_changed = False
     
+    if hasattr(plot_type, 'limits'):
+        special_limits = plot_type.properties['special_limits']
+    else:
+        special_limits = [False, False]
+    
     # x axis limits
-    x_title = shared.field_mappings[x_axis].title
-    if shared.limits.has_option('limits', x_title):
-        # existing limits
-        limits_string = shared.limits.get('limits', x_title)
-        old_x_limits = ast.literal_eval(limits_string)
-        if not np.allclose(old_x_limits, plot_limits['x_axis']):
-            # set new limits
-            shared.limits.set('limits', x_title, repr(plot_limits['x_axis']))
+    if special_limits[0]:
+        if not plot_limits['x_axis'] == ['auto', 'auto']:
+            plot_type.limits[0] = plot_limits['x_axis']
             coord_changed = True
     else:
-        # no existing limits
-        if not plot_limits['x_axis'] == ('auto', 'auto'):
-            # set new limits
-            shared.limits.set('limits', x_title, repr(plot_limits['x_axis']))
-            coord_changed = True
+        x_title = shared.field_mappings[x_axis].title
+        if shared.limits.has_option('limits', x_title):
+            # existing limits
+            limits_string = shared.limits.get('limits', x_title)
+            old_x_limits = ast.literal_eval(limits_string)
+            if not np.allclose(old_x_limits, plot_limits['x_axis']):
+                # set new limits
+                shared.limits.set('limits', x_title, repr(plot_limits['x_axis']))
+                coord_changed = True
+        else:
+            # no existing limits
+            if not plot_limits['x_axis'] == ['auto', 'auto']:
+                # set new limits
+                shared.limits.set('limits', x_title, repr(plot_limits['x_axis']))
+                coord_changed = True
     
     # y axis limits
-    y_title = shared.field_mappings[y_axis].title
-    if shared.limits.has_option('limits', y_title):
-        # existing limits
-        limits_string = shared.limits.get('limits', y_title)
-        old_y_limits = ast.literal_eval(limits_string)
-        if not np.allclose(old_y_limits, plot_limits['y_axis']):
-            # set new limits
-            shared.limits.set('limits', y_title, repr(plot_limits['y_axis']))
+    if special_limits[1]:
+        if not plot_limits['y_axis'] == ['auto', 'auto']:
+            plot_type.limits[1] = plot_limits['y_axis']
             coord_changed = True
     else:
-        # no existing limits
-        if not plot_limits['y_axis'] == ('auto', 'auto'):
-            # set new limits
-            shared.limits.set('limits', y_title, repr(plot_limits['y_axis']))
-            coord_changed = True
+        y_title = shared.field_mappings[y_axis].title
+        if shared.limits.has_option('limits', y_title):
+            # existing limits
+            limits_string = shared.limits.get('limits', y_title)
+            old_y_limits = ast.literal_eval(limits_string)
+            if not np.allclose(old_y_limits, plot_limits['y_axis']):
+                # set new limits
+                shared.limits.set('limits', y_title, repr(plot_limits['y_axis']))
+                coord_changed = True
+        else:
+            # no existing limits
+            if not plot_limits['y_axis'] == ['auto', 'auto']:
+                # set new limits
+                shared.limits.set('limits', y_title, repr(plot_limits['y_axis']))
+                coord_changed = True
     
     # render axis limits
     if render is not None:
@@ -62,7 +78,7 @@ def set_current_limits(x_axis, y_axis, render, vector, plot_limits, shared):
                 quantity_changed = True
         else:
             # no existing limits
-            if not plot_limits['render'] == ('auto', 'auto'):
+            if not plot_limits['render'] == ['auto', 'auto']:
                 # set new limits
                 shared.limits.set('limits', render_title,
                                   repr(plot_limits['render']))
@@ -82,7 +98,7 @@ def set_current_limits(x_axis, y_axis, render, vector, plot_limits, shared):
                 quantity_changed = True
         else:
             # no existing limits
-            if not plot_limits['vector'] == ('auto', 'auto'):
+            if not plot_limits['vector'] == ['auto', 'auto']:
                 # set new limits
                 shared.limits.set('limits', vector_title,
                                   repr(plot_limits['vector']))
@@ -93,14 +109,15 @@ def set_current_limits(x_axis, y_axis, render, vector, plot_limits, shared):
     if quantity_changed:
         shared.config.set('limits', 'adaptive', 'fixed')
 
+
 def get_current_limits(x_axis, x_index, y_axis, y_index, render,
-                        render_index, vector, shared):
+                        render_index, vector, plot_type, shared):
     """
     Find the current limits, based on options set and limits in use
     """
     
-    plot_limits = {'x_axis': ('auto', 'auto'), 'y_axis': ('auto', 'auto'),
-                    'render': ('auto', 'auto'), 'vector': ('auto', 'auto')}
+    plot_limits = {'x_axis': ['auto', 'auto'], 'y_axis': ['auto', 'auto'],
+                    'render': ['auto', 'auto'], 'vector': ['auto', 'auto']}
     data_limits = []
     
     # Obtain options
@@ -112,9 +129,6 @@ def get_current_limits(x_axis, x_index, y_axis, y_index, render,
     
     option = shared.config.get('limits', 'filter_all')
     filter_all = True if option=='on' else False
-    
-    #option = shared.config.get('xsec', 'plot_type')
-    #projection = True if option=='proj' else False
     
     # Plot limits
     if not adaptive_coords:
@@ -165,6 +179,13 @@ def get_current_limits(x_axis, x_index, y_axis, y_index, render,
                                     'index': f_index,
                                     'limits': f_limits,
                                     'width': f_width})
+    
+    if hasattr(plot_type, 'limits'):
+        special_limits = plot_type.properties['special_limits']
+        if special_limits[0]:
+            plot_limits['x_axis'] = plot_type.limits[0]
+        if special_limits[1]:
+            plot_limits['y_axis'] = plot_type.limits[1]
     
     return plot_limits, data_limits
 
