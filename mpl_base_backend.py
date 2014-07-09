@@ -213,7 +213,8 @@ class BackendMPL():
                 
                 x_points = np.linspace(xlim[0], xlim[1], res)
                 if qx_transform is not None:
-                    x_untransformed = qx_transform[1](x_points).astype(np.float_)
+                    x_untransformed = qx_transform[1](x_points).astype(
+                        np.float_)
                 
                 legend = False
                 extra_plots = []

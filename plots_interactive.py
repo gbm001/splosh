@@ -210,42 +210,28 @@ def key_save(backend, axes_name, x, y, key, info):
     render_transform = backend.plot_transforms['render_transform']
     
     # Get current limits, apply appropriate transforms
-    x_min, x_max = backend.current_xylimits[0]
-    if x_min != 'auto' and x_transform is not None:
-        x_min = x_transform[1](x_min)
-    if x_max != 'auto' and x_transform is not None:
-        x_max = x_transform[1](x_max)
-    
-    y_min, y_max = backend.current_xylimits[1]
-    if y_min != 'auto' and y_transform is not None:
-        y_min = y_transform[1](y_min)
-    if y_max != 'auto' and y_transform is not None:
-        y_max = y_transform[1](y_max)
-    
-    r_min, r_max = backend.current_clim
-    if r_min != 'auto' and r_transform is not None:
-        r_min = r_transform[1](r_min)
-    if r_max != 'auto' and y_transform is not None:
-        r_max = r_transform[1](r_max)
+    xlim = backend.current_xylimits[0]
+    ylim = backend.current_xylimits[1]
+    rlim = backend.current_clim
     
     if axes_name == 'main_axes':
-        plot_limits['x_axis'] = [x_min, x_max]
-        plot_limits['y_axis'] = [y_min, y_max]
+        plot_limits['x_axis'] = xlim
+        plot_limits['y_axis'] = ylim
         print('Plot options and x/y limits saved to memory')
     elif axes_name == 'x-axis':
-        plot_limits['x_axis'] = [x_min, x_max]
+        plot_limits['x_axis'] = xlim
         print('Plot options and x axis limits saved to memory')
     elif axes_name == 'y-axis':
-        plot_limits['y_axis'] = [y_min, y_max]
+        plot_limits['y_axis'] = ylim
         print('Plot options and y axis limits saved to memory')
     elif axes_name == 'cbar':
-        plot_limits['render'] = [r_min, r_max]
+        plot_limits['render'] = rlim
         print('Plot options and colourbar limits saved to memory')
     else:
-        plot_limits['x_axis'] = [r_min, r_max]
-        plot_limits['y_axis'] = [r_min, r_max]
+        plot_limits['x_axis'] = xlim
+        plot_limits['y_axis'] = ylim
         if plot_args['render'] is not None:
-            plot_limits['render'] = [r_min, r_max]
+            plot_limits['render'] = rlim
         print('Plot options and limits saved to memory')
     
     limits.set_current_limits(x_axis, y_axis, render, vector,
