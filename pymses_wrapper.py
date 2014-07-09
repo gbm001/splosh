@@ -603,12 +603,9 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim, zlim,
     
     multiprocessing = (shared.config.get('opts', 'multiprocessing') == 'on')
     
-    # First, construct region filter - check for 'position' limits
-    axes = [0,1,2]
-    axes.remove(x_index)
-    axes.remove(y_index)
-    z_axis = axes[0]
-    z_axis_name = ['x', 'y', 'z'][z_axis]
+    # First, check for 'position' limits
+    z_index = (set([0,1,2]) - set([x_index, y_index])).pop()
+    z_axis_name = ['x', 'y', 'z'][z_index]
     up_axis_name = ['x', 'y', 'z'][y_index]
     
     if x_field.name != 'position':
@@ -645,7 +642,6 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim, zlim,
     box_size = (box_max - box_min)
     box_size_xy = [box_size[x_index], box_size[y_index]]
     
-    z_index = (set([0,1,2]) - set([x_index, y_index])).pop()
     zlim = zlim / box_length[z_index]
     distance = 0.5 - zlim[0]
     far_cut_depth = zlim[1] - 0.5
@@ -712,7 +708,8 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim, zlim,
                                  multiprocessing=multiprocessing)
     else:
         # Slice map
-        z_slice = (z_slice / box_length[z_axis]) - 0.5 # camera is at box centre
+        z_slice = (z_slice / box_length[z_index]) - 0.5 
+        # camera is at box centre
         
         # slice doesn't work if we are precisely along grid spacing.
         z_res = z_slice * resolution
