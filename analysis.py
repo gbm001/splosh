@@ -283,21 +283,23 @@ def get_render_plot(x_field, x_index, x_unit,
         if plot_transforms['render_transform'] is not None:
             grid_data = plot_transforms['render_transform'][0](grid_data)
     
+        # Plot limits
+        xlim = xlim * step.length_mks / (x_unit * box_length[x_index])
+        ylim = ylim * step.length_mks / (x_unit * box_length[x_index])
+        
+        if changed_x:
+            xmin, xmax = xlim
+        else:
+            xmin, xmax = draw_limits['x_axis']
+        if changed_y:
+            ymin, ymax = ylim
+        else:
+            ymin, ymax = draw_limits['y_axis']
+    
     else:
         # Use old data
         grid_data = data_list_pass[0]
-    
-    # Plot limits
-    xlim = xlim * step.length_mks / (x_unit * box_length[x_index])
-    ylim = ylim * step.length_mks / (x_unit * box_length[x_index])
-    
-    if changed_x:
-        xmin, xmax = xlim
-    else:
         xmin, xmax = draw_limits['x_axis']
-    if changed_y:
-        ymin, ymax = ylim
-    else:
         ymin, ymax = draw_limits['y_axis']
     
     cmin, cmax = draw_limits['render']
