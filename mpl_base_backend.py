@@ -186,12 +186,10 @@ class BackendMPL():
                     if 'ylim' in extra_info:
                         ax.set_ylim(extra_info['ylim'])
                     
-                    print('limits: ', limits)
-                    
                     if limits is not None:
-                        if limits[0] is not None:
+                        if limits[0] != ['auto', 'auto']:
                             ax.set_xlim(limits[0])
-                        if limits[1] is not None:
+                        if limits[1] != ['auto', 'auto']:
                             ax.set_ylim(limits[1])
                     
                     xlim = ax.get_xlim()

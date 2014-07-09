@@ -634,7 +634,7 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         else:
             plot_options['data_axis'] = None
         
-        draw_limits['xy_limits'] = [None, None]
+        draw_limits['xy_limits'] = [['auto', 'auto'], ['auto', 'auto']]
         
         if plot_options['data_axis'] != 'x':
             qx_transform = plot_transforms['qx_transform']
