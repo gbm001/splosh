@@ -592,7 +592,7 @@ def get_sample_data(x_field, x_index, xlim,
     return data_array, weights, (bins_x, bins_y)
 
 
-def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim,
+def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim, zlim,
                   render_field, render_index, render_fac, render_transform,
                   vector_field, vector_fac, data_limits,
                   proj, resolution, z_slice, step, shared):
@@ -629,13 +629,8 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim,
     # Get box size region from boxlen
     box_length = step.box_length
     
-    # Load data, running through box filter and then creating point dataset
+    # Load data
     amr = step.data_set.amr_source(field_list)
-    region = get_region_filter(data_limits, step)
-    amr_region = pymses.filters.RegionFilter(region, amr)
-    
-    # Now, construct function filter stack
-    filter_stack = function_filter_stack(amr_region, data_limits)
     
     # Set up box for camera
     box_min = np.zeros_like(box_length)
@@ -649,6 +644,11 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim,
     box_centre = (box_max + box_min) / 2.0
     box_size = (box_max - box_min)
     box_size_xy = [box_size[x_index], box_size[y_index]]
+    
+    z_index = (set([0,1,2]) - set([x_index, y_index])).pop()
+    zlim = zlim / box_length[z_index]
+    distance = 0.5 - zlim[0]
+    far_cut_depth = zlim[1] - 0.5
     
     from pymses.analysis.visualization import Camera, ScalarOperator
     if render_field.width == 1:
@@ -702,9 +702,9 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim,
     
     if proj:
         # Raytraced integrated plot
-        # distance=0.5, far_cut_depth=0.5,
         cam = Camera(center=box_centre, line_of_sight_axis=z_axis_name,
                     region_size=box_size_xy, up_vector=up_axis_name,
+                    distance=distance, far_cut_depth=far_cut_depth,
                     map_max_size=resolution, log_sensitive=False)
         from pymses.analysis.visualization.raytracing import RayTracer
         rt = RayTracer(step.data_set, field_list)
@@ -724,7 +724,7 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim,
                     region_size=box_size_xy, up_vector=up_axis_name,
                     map_max_size=resolution, log_sensitive=False)
         from pymses.analysis.visualization import SliceMap
-        mapped_data = SliceMap(amr_region, cam, render_op, z=z_slice)
+        mapped_data = SliceMap(amr, cam, render_op, z=z_slice)
 
     step.data_set = None
     gc.collect()

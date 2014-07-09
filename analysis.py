@@ -231,9 +231,39 @@ def get_render_plot(x_field, x_index, x_unit,
         ylim = (np.array(draw_limits['y_axis']) * y_unit *
                     box_length[y_index] / step.length_mks)
         
+        # We need to restrict xlim and ylim now, based on data limits
+        # and find a zlim
+        position_limits = [x for x in data_limits if x['name'] == 'position']
+        zlim = np.array([0.0, 1.0])
+        changed_x = False
+        changed_y = False
+        for limit in position_limits:
+            index = limit['index']
+            code_mks = limit['field'].code_mks
+            min_f, max_f = limit['limits']
+            if min_f != 'none':
+                min_f = min_f * step.box_length[index] / code_mks
+            if max_f != 'none':
+                max_f = max_f * step.box_length[index] / code_mks
+            
+            if limit['index'] == x_index:
+                changed_x = True
+                if min_f != 'none':
+                    xlim[0] = max(xlim[0], min_f)
+                elif max_f != 'none':
+                    xlim[1] = min(xlim[1], max_f)
+            elif limit['index'] == y_index:
+                changed_y = True
+                if min_f != 'none':
+                    ylim[0] = max(ylim[0], min_f)
+                elif max_f != 'none':
+                    ylim[1] = min(ylim[1], max_f)
+            else:
+                zlim = [min_f, max_f]
+        
         # Get grid data WITHOUT render_transform: transform later
         grid_data = wf.get_grid_data(
-                x_field, x_index, xlim, y_field, y_index, ylim,
+                x_field, x_index, xlim, y_field, y_index, ylim, zlim,
                 render_field, render_index, render_fac, None,
                 vector_field, vector_fac, data_limits,
                 proj, resolution, z_slice, step, shared)
@@ -257,8 +287,17 @@ def get_render_plot(x_field, x_index, x_unit,
         grid_data = data_list_pass[0]
     
     # Plot limits
-    xmin, xmax = draw_limits['x_axis']
-    ymin, ymax = draw_limits['y_axis']
+    xlim = xlim * step.length_mks / (x_unit * box_length[x_index])
+    ylim = ylim * step.length_mks / (x_unit * box_length[x_index])
+    
+    if changed_x:
+        xmin, xmax = xlim
+    else:
+        xmin, xmax = draw_limits['x_axis']
+    if changed_y:
+        ymin, ymax = ylim
+    else:
+        ymin, ymax = draw_limits['y_axis']
     
     cmin, cmax = draw_limits['render']
     if cmin == 'auto':

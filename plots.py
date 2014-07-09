@@ -533,35 +533,11 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         xlim_snap = limits.snap_to_grid(xlim, None, True, False,
                                         box_length, minmax_res)[0]
         draw_limits['x_axis'] = xlim_snap
-        
-        xdata = list(xlim)
-        dx_res = box_length[0] / minmax_res[0]
-        xdata[0] = min(xlim_snap[0], xlim[0])
-        xdata[1] = max(xlim_snap[1], xlim[1])
-        xdata[0] = max(0.0, xdata[0] - 1.1*dx_res)
-        xdata[1] = min(box_length[0], xdata[1] + 1.1*dx_res)
-        data_limits.append({'name': x_field.name,
-                            'field': x_field,
-                            'width': x_field.width,
-                            'index': x_index,
-                            'limits': xdata})
     
     if y_pos:
         ylim_snap = limits.snap_to_grid(None, ylim, False, True,
                                         box_length, minmax_res)[1]
         draw_limits['y_axis'] = ylim_snap
-        
-        ydata = list(ylim)
-        dy_res = box_length[1] / minmax_res[0]
-        ydata[0] = min(ylim_snap[0], ylim[0])
-        ydata[1] = max(ylim_snap[1], ylim[1])
-        ydata[0] = max(0.0, ydata[0] - 1.1*dy_res)
-        ydata[1] = min(box_length[1], ydata[1] + 1.1*dy_res)
-        data_limits.append({'name': y_field.name,
-                            'field': y_field,
-                            'width': x_field.width,
-                            'index': y_index,
-                            'limits': ydata})
     
     # Get data
     if plot_type == 'hist2d':
