@@ -102,8 +102,8 @@ def set_limits(shared, config_section, limit_type):
             new_limits = (new_limit_left, new_limit_right)
         
         # Save new limits to limits configparser
-        if (new_limit_left == default_string and
-                new_limit_right == default_string):
+        if (new_limits[0] == default_string and
+                new_limits[1] == default_string):
             # Default limits now, so remove from configparser
             if shared.limits.has_option(limits_section, fm.title):
                 shared.limits.remove_option(limits_section, fm.title)
