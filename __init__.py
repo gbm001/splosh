@@ -17,14 +17,26 @@ import pymses
 import pymses_wrapper as wrapper_functions
 from interactive import run
 
-from png_backend import BackendPNG
-from pdf_backend import BackendPDF
-from qt4_backend import BackendQT4
-from txt_backend import BackendTXT
 backend_list = []
-backend_list.append(BackendQT4())
-backend_list.append(BackendPNG())
-backend_list.append(BackendPDF())
-backend_list.append(BackendTXT())
+try:
+    from qt4_backend import BackendQT4
+    backend_list.append(BackendQT4())
+except ImportError:
+    pass
+try:
+    from png_backend import BackendPNG
+    backend_list.append(BackendPNG())
+except ImportError:
+    pass
+try:
+    from pdf_backend import BackendPDF
+    backend_list.append(BackendPDF())
+except ImportError:
+    pass
+try:
+    from txt_backend import BackendTXT
+    backend_list.append(BackendTXT())
+except ImportError:
+    pass
 
 print(__code_name + ' loaded')

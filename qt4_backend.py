@@ -5,7 +5,32 @@ This submodule implements the QT4 interactive backend.
 from __future__ import print_function
 import numpy as np
 from mpl_base_backend import BackendMPL
-from PySide import QtCore, QtGui
+from matplotlib import rcParams
+
+if 'backend.qt4' in rcParams:
+    # We need to match what matplotlib is using
+    qt_library = rcParams['backend.qt4'].lower()
+    if qt_library == 'pyqt4':      # should be PyQt4 in rcParams
+        pass
+    elif qt_library == 'pyside':   # shoule be PySide in rcParams
+        pass
+    else:
+        raise ImportError('Unknown matplotlib setting of backend.qt4!')
+else:
+    # best guess if we don't have backend.qt4? But probably PyQt4
+    try:
+        import PyQt4
+        qt_library = 'pyqt4'
+    except ImportError:
+        import PySide
+        qt_library = 'pyside'
+
+if qt_library == 'pyqt4':
+    print('Using PyQt4')
+    from PyQt4 import QtCore, QtGui
+elif qt_library == 'pyside':
+    print('Using PySide')
+    from PySide import QtCore, QtGui
 
 class BackendQT4(BackendMPL):
     """
