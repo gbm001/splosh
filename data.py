@@ -167,8 +167,12 @@ class SimStep():
         self.time_mks = wrapper_functions.get_code_mks(self.units, 'time')
         self.box_length = wrapper_functions.get_box_limits(snapshot)
         self.length_mks = wrapper_functions.get_code_mks(self.units, 'position')
+        self.velocity_mks = self.length_mks / self.time_mks
         self.ndim = wrapper_functions.get_ndim(snapshot)
         self.minmax_res = wrapper_functions.get_minmax_res(snapshot)
+        self.sink_data = wrapper_functions.get_sink_data(snapshot)
+        self.sink_mass_mks = wrapper_functions.get_code_mks(self.units,
+                                                            'sink_mass')
         self.data_set = snapshot
         
         return
@@ -230,6 +234,7 @@ class ConfigOptions(configparser.SafeConfigParser):
         self.set('page', 'equal_scales', 'on')
         
         self.add_section('opts')
+        self.set('opts', 'show_sinks', 'on')
         self.set('opts', 'weighting', 'volume')
         self.set('opts', 'multiprocessing', 'off')
         

@@ -74,14 +74,48 @@ class BackendMPL():
         clim = self.draw_limits['render']
         
         # Transforms
-        x_transform = self.plot_transforms['x_transform']
-        y_transform = self.plot_transforms['y_transform']
+        #x_transform = self.plot_transforms['x_transform']
+        #y_transform = self.plot_transforms['y_transform']
         hist_transform = self.plot_transforms['hist_transform']
         render_transform = self.plot_transforms['render_transform']
         
         limits = self.draw_limits['xy_limits']
         self.current_xylimits = limits
         self.current_clim = ['auto', 'auto']
+        
+        # Sink data
+        sink_data = self.plot_options['sink_data']
+        if sink_data is not None:
+            sink_options = self.plot_options['sink_options']
+            nsink = sink_data['mass'].size
+            sink_x, sink_y = sink_options['sink_xy']
+            sink_mask = [False] * nsink
+            for i in range(nsink):
+                if (xmin <= sink_x[i] <= xmax) and (ymin <= sink_y[i] <= ymax):
+                    sink_mask[i] = True
+            print('Plotting {} of {} sinks'.format(sum(sink_mask), nsink))
+            
+            print('Sink data:')
+            fmt_string = (' {:<4s}|{:^12.12s}|{:^42s}|{:^42s}|{:^12s}')
+            print(fmt_string.format(
+                'id',
+                'mass' + sink_options['mass_str'],
+                'position (x,y,z)' + sink_options['position_str'],
+                'velocity (vx,vy,vz)' + sink_options['velocity_str'],
+                'age' + sink_options['age_str']))
+            s_id = sink_data['id']
+            s_mass = sink_data['mass']
+            s_position = sink_data['position']
+            s_velocity = sink_data['velocity']
+            s_age = sink_data['age']
+            for i in range(nsink):
+                fmt_string = (' {:<4d}|{:<12g}|({:<12g}, {:<12g}, {:<12g})|' +
+                              '({:<12g}, {:<12g}, {:<12g})|{:<12g}')
+                print(fmt_string.format(
+                    s_id[i], s_mass[i],
+                    s_position[i][0], s_position[i][1], s_position[i][2],
+                    s_velocity[i][0], s_velocity[i][1], s_velocity[i][2],
+                    s_age[i]))
         
         # Create figure
         ax = self.fig.add_subplot(111)

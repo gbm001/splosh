@@ -7,6 +7,12 @@ import pymses
 import os
 import gc
 import numpy as np
+    
+sink_dtype = np.dtype([('id', np.int_),
+                       ('mass', np.float_),
+                       ('position', (np.float_, 3)),
+                       ('velocity', (np.float_, 3)),
+                       ('age', np.float_)])
 
 
 def convert_dir_to_RAMSES_args(out_dir):
@@ -97,6 +103,17 @@ def load_output(output_dir):
                 if (name not in ro.info) and (name not in renamed_by_pymses):
                     ro.info[name] = value
     
+    # Read the sink file, if present
+    sink_file = os.path.join(
+        output_dir, 'sink_{0:05d}.csv'.format(output_number))
+    
+    if os.path.isfile(sink_file):
+        with open(sink_file) as f:
+            sink_data = np.genfromtxt(f, delimiter=',', dtype=sink_dtype)
+        ro.info['sink_data'] = sink_data
+    else:
+        ro.info['sink_data'] = None
+    
     return ro
 
 
@@ -114,15 +131,24 @@ def get_ndim(ro):
     return ro.info['ndim']
 
 
+def get_sink_data(ro):
+    """
+    Take a RAMSES object and return sink data loaded earlier
+    """
+    return ro.info['sink_data']
+
+
 def get_units(ro):
     """
     Take a RAMSES object and return a dictionary of units
     """
+    from pymses.utils import constants as C
     units = {}
     for key, val in ro.info.iteritems():
         if key.startswith('unit_'):
             newkey = key[5:]
             units[newkey] = val
+    units['sink_mass'] = 2e33 * C.g # Sink mass is hardcoded as 10^23g in RAMSES
     return units
 
 
@@ -155,6 +181,8 @@ def get_code_units_guess(units, field_name):
         code_mks = units['pressure']
     elif field_name == 'g':
         code_mks = (units['length'] / units['time']**2)
+    elif field_name in units:
+        code_mks = units[field_name]
     else:
         print('Unknown data type: {}'.format(field_name))
         code_mks = pymses.utils.constants.Unit((0,0,0,0,0,0), 1.0)

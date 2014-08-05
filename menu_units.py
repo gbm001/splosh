@@ -13,6 +13,21 @@ except NameError:
     pass
 
 
+def get_unit(shared, unit_name):
+    """
+    Get a single unit (unit and string) - helper function
+    """
+    if (shared.config.get('data', 'use_units') != 'OFF' and
+            shared.config.has_option('units', unit_name)):
+        unit_tuple_str = shared.config.get('units', unit_name)
+        unit_val, unit_str = ast.literal_eval(unit_tuple_str)
+        unit_str = ' [' + unit_str + ']'
+    else:
+        unit_val = 1.0
+        unit_str = ''
+    return unit_val, unit_str
+
+
 def set_units(shared, *args):
     """
     Manually set units
@@ -35,11 +50,12 @@ def set_units(shared, *args):
         input_string = input(prompt).strip()
         if not input_string:
             return
-        if not (input_string == '-1' or input_string.isdigit()):
+        if not (input_string.isdigit() or input_string == '-1' or
+                input_string == '-2'):
             print(' >> Invalid input string!')
             continue
         unit_index = int(input_string)
-        if not (-1 <= unit_index <= len(fields)):
+        if not (-2 <= unit_index <= len(fields)):
             print(' >> Invalid choice!')
             continue
         
@@ -52,11 +68,18 @@ def set_units(shared, *args):
                 val = 'SAME'
                 unit_str = ''
             prompt = ("Enter multiplier (number to multiply values by),\n"
-                    "or SAME to use same units as x/y/z "
-                    "[default={}]: ".format(val))
+                      "or SAME to use same units as x/y/z "
+                      "[default={}]: ".format(val))
             
         else:
-            if unit_index == 0:
+            if unit_index == -2:
+                if shared.config.has_option('units', 'sink_mass'):
+                    unit_tuple_str = shared.config.get('units', 'sink_mass')
+                    val, unit_str = ast.literal_eval(unit_tuple_str)
+                else:
+                    val = 1.0
+                    unit_str = ''
+            elif unit_index == 0:
                 if shared.config.has_option('units', 'time'):
                     unit_tuple_str = shared.config.get('units', 'time')
                     val, unit_str = ast.literal_eval(unit_tuple_str)
@@ -73,7 +96,7 @@ def set_units(shared, *args):
                     unit_str = ''
             
             prompt = ("Enter multiplier (number to multiply values by) "
-                        "[default={}]: ".format(val))
+                      "[default={}]: ".format(val))
         
         while True:
             input_string = input(prompt).strip()
@@ -109,7 +132,9 @@ def set_units(shared, *args):
         
         # Save new limits to configparser
         new_unit_tuple_str = repr((new_val, new_unit_str))
-        if unit_index == -1:
+        if unit_index == -2:
+            shared.config.set('units', 'sink_mass', new_unit_tuple_str)
+        elif unit_index == -1:
             shared.config.set('units', 'column', new_unit_tuple_str)
         elif unit_index == 0:
             shared.config.set('units', 'time', new_unit_tuple_str)
@@ -131,6 +156,16 @@ def print_units(shared, fields):
     
     opt_width = len(str(len(fields))) + 3
     opt_width = max(opt_width, 5)
+    
+    titles.append('sink mass')
+    if shared.config.has_option('units', 'sink_mass'):
+        unit_tuple_str = shared.config.get('units', 'sink_mass')
+        val, unit_str = ast.literal_eval(unit_tuple_str)
+        val_strs.append(str(val))
+        unit_strs.append(unit_str)
+    else:
+        val_strs.append('1.0')
+        unit_strs.append('NONE')
     
     titles.append('integrated column length')
     if shared.config.has_option('units', 'column'):
@@ -184,7 +219,7 @@ def print_units(shared, fields):
         title = titles[i].ljust(title_len)
         val_str = val_strs[i].ljust(min_max_len)
         unit_str = unit_strs[i].ljust(min_max_len)
-        opt_no = '({})'.format(i-1).ljust(opt_width)
+        opt_no = '({})'.format(i-2).ljust(opt_width)
         print(' {}{} : ( {} : {} )'.format(opt_no, title, val_str, unit_str))
     
     return

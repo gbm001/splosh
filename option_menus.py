@@ -79,6 +79,10 @@ def init_options(options, shared):
                           option_menu, subopts, 'page')
     # Particle plot options
     subopts = []
+    info = {'config_item': 'show_sinks', 'flip_opts': ['off', 'on'],
+            'print_call': lookup_single}
+    subopts.append(SubOption('Show sink particles on rendered plots',
+                             single_flip_option, info))
     info = {'config_item': 'weighting', 'flip_opts': ['volume', 'mass'],
             'print_call': lookup_single}
     subopts.append(SubOption('Weighting of histograms (not y-axis density)',

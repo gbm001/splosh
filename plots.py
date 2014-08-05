@@ -285,79 +285,102 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     from . import transforms
     from . import limits
     from . import analysis
+    from . import menu_units
     import numpy as np
     import ast
     
     draw_limits = dict(plot_limits)
     data_limits = list(data_limits)
     
-    # Get fields and test for units
+    # Get fields
     if x_axis is not None:
         x_field = shared.field_mappings[x_axis].field
-        has_x_unit = shared.config.has_option('units', '_'+x_field.name)
-    else:
-        has_x_unit = False
+        #has_x_unit = shared.config.has_option('units', '_'+x_field.name)
+    #else:
+        #has_x_unit = False
     if y_axis is not None:
         y_field = shared.field_mappings[y_axis].field
-        has_y_unit = shared.config.has_option('units', '_'+y_field.name)
-    else:
-        has_y_unit = False
+        #has_y_unit = shared.config.has_option('units', '_'+y_field.name)
+    #else:
+        #has_y_unit = False
     if render is not None:
         render_field = shared.field_mappings[render].field
-        has_render_unit = shared.config.has_option(
-            'units', '_'+render_field.name)
+        #has_render_unit = shared.config.has_option(
+            #'units', '_'+render_field.name)
     else:
-        has_render_unit = False
+        render_field = None
+        #has_render_unit = False
     if vector is not None:
         vector_field = shared.field_mappings[vector].field
-        has_vector_unit = shared.config.has_option(
-            'units', '_'+vector_field.name)
+        #has_vector_unit = shared.config.has_option(
+            #'units', '_'+vector_field.name)
     else:
         vector_field = None
-        has_vector_unit = False
-    has_time_unit = shared.config.has_option('units', 'time')
-    if shared.config.get('data', 'use_units') == 'OFF':
-        has_x_unit = False
-        has_y_unit = False
-        has_render_unit = False
-        has_vector_unit = False
-        has_time_unit = False
+        #has_vector_unit = False
+    #has_time_unit = shared.config.has_option('units', 'time')
+    #has_sink_mass_unit = shared.config.has_option('units', 'sink_mass')
+    #if shared.config.get('data', 'use_units') == 'OFF':
+        #has_x_unit = False
+        #has_y_unit = False
+        #has_render_unit = False
+        #has_vector_unit = False
+        #has_time_unit = False
+        #has_sink_mass_unit = False
     
     # Get units
-    if has_x_unit and x_axis is not None:
-        unit_tuple_str = shared.config.get('units', '_'+x_field.name)
-        x_unit, x_unit_str = ast.literal_eval(unit_tuple_str)
-        x_unit_str = ' [' + x_unit_str + ']'
+    #if has_x_unit and x_axis is not None:
+        #unit_tuple_str = shared.config.get('units', '_'+x_field.name)
+        #x_unit, x_unit_str = ast.literal_eval(unit_tuple_str)
+        #x_unit_str = ' [' + x_unit_str + ']'
+    #else:
+        #x_unit = 1.0
+        #x_unit_str = ''
+    if x_axis is not None:
+        x_unit, x_unit_str = menu_units.get_unit(shared, '_'+x_field.name)
     else:
-        x_unit = 1.0
-        x_unit_str = ''
-    if has_y_unit and y_axis is not None:
-        unit_tuple_str = shared.config.get('units', '_'+y_field.name)
-        y_unit, y_unit_str = ast.literal_eval(unit_tuple_str)
-        y_unit_str = ' [' + y_unit_str + ']'
+        x_unit, x_unit_str = (1.0, '')
+    #if has_y_unit and y_axis is not None:
+        #unit_tuple_str = shared.config.get('units', '_'+y_field.name)
+        #y_unit, y_unit_str = ast.literal_eval(unit_tuple_str)
+        #y_unit_str = ' [' + y_unit_str + ']'
+    #else:
+        #y_unit = 1.0
+        #y_unit_str = ''
+    if y_axis is not None:
+        y_unit, y_unit_str = menu_units.get_unit(shared, '_'+y_field.name)
     else:
-        y_unit = 1.0
-        y_unit_str = ''
-    if has_render_unit:
-        unit_tuple_str = shared.config.get('units', '_'+render_field.name)
-        render_unit, render_unit_str = ast.literal_eval(unit_tuple_str)
+        y_unit, y_unit_str = (1.0, '')
+    #if has_render_unit:
+        #unit_tuple_str = shared.config.get('units', '_'+render_field.name)
+        #render_unit, render_unit_str = ast.literal_eval(unit_tuple_str)
+    #else:
+        #render_unit = 1.0
+        #render_unit_str = ''
+    if render is not None:
+        render_unit, render_unit_str = menu_units.get_unit(
+            shared, '_'+render_field.name)
     else:
-        render_unit = 1.0
-        render_unit_str = ''
-    if has_vector_unit:
-        unit_tuple_str = shared.config.get('units', '_'+vector_field.name)
-        vector_unit, vector_unit_str = ast.literal_eval(unit_tuple_str)
-        vector_unit_str = ' [' + vector_unit_str + ']'
+        render_unit, render_unit_str = (1.0, '')
+    #if has_vector_unit:
+        #unit_tuple_str = shared.config.get('units', '_'+vector_field.name)
+        #vector_unit, vector_unit_str = ast.literal_eval(unit_tuple_str)
+        #vector_unit_str = ' [' + vector_unit_str + ']'
+    #else:
+        #vector_unit = 1.0
+        #vector_unit_str = ''
+    if vector is not None:
+        vector_unit, vector_unit_str = menu_units.get_unit(
+            shared, '_'+render_field.name)
     else:
-        vector_unit = 1.0
-        vector_unit_str = ''
-    if has_time_unit:
-        unit_tuple_str = shared.config.get('units', 'time')
-        time_unit, time_unit_str = ast.literal_eval(unit_tuple_str)
-    else:
-        time_unit = 1.0
-        time_unit_str = ''
+        vector_unit, vector_unit_str = (1.0, '')
+    time_unit, time_unit_str = menu_units.get_unit(shared, 'time')
+    sink_mass_unit, sink_mass_unit_str = menu_units.get_unit(
+        shared, 'sink_mass')
+    position_unit, position_unit_str = menu_units.get_unit(
+        shared, '_position')
+    velocity_unit, velocity_unit_str = menu_units.get_unit(shared, '_vel')
     
+    # Cross section or projection plot?
     if plot_type == 'render':
         proj = (shared.config.get('xsec', 'plot_type') == 'proj')
     
@@ -369,6 +392,7 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     if plot_options is None:
         plot_options = {}
         plot_options['data_axis'] = None
+        plot_options['sink_data'] = None
         #plot_options['title'] = 'Plot title here'
         if x_axis is not None:
             x_fm_title = shared.field_mappings[x_axis].title
@@ -469,15 +493,11 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     
         # find box length
         if x_pos:
-            box_len_x = step.length_mks
-            if has_x_unit:
-                box_len_x = box_len_x / x_unit
+            box_len_x = step.length_mks / x_unit
         else:
             box_len_x = None
         if y_pos:
-            box_len_y = step.length_mks
-            if has_y_unit:
-                box_len_y = box_len_y / y_unit
+            box_len_y = step.length_mks / y_unit
         else:
             box_len_y = None
         plot_options['box_length'] = (box_len_x, box_len_y)
@@ -491,6 +511,39 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         else:
             resolution = int(resolution)
         plot_options['resolution'] = resolution
+        
+        # Deal with sink data, if present and if we are using it
+        if plot_type == 'render':
+            if (shared.config.has_option('opts', 'show_sinks') and
+                    shared.config.get('opts', 'show_sinks') == 'on'):
+                sink_data = np.array(step.sink_data)
+                sink_options = {}
+                sink_data['age'] = (sink_data['age'] * step.time_mks /
+                                     time_unit)
+                sink_x = (sink_data['position'][:, x_index] *
+                          step.length_mks / (box_len_x * x_unit))
+                sink_y = (sink_data['position'][:, y_index] *
+                          step.length_mks / (box_len_y * y_unit))
+                if plot_transforms['x_transform'] is not None:
+                    sink_x[:] = plot_transforms['x_transform'][0](sink_x)
+                if plot_transforms['y_transform'] is not None:
+                    sink_y[:] = plot_transforms['y_transform'][0](sink_y)
+                
+                if x_unit != y_unit:
+                    raise AssertionError('x_unit != y_unit for rendered plot!')
+                sink_data['position'] = (sink_data['position']*step.length_mks /
+                                         (step.box_length * position_unit))
+                sink_data['velocity'] = (sink_data['velocity'] *
+                                         step.velocity_mks / velocity_unit)
+                sink_data['mass'] = (sink_data['mass'] * step.sink_mass_mks /
+                                     sink_mass_unit)
+                plot_options['sink_data'] = sink_data
+                sink_options['sink_xy'] = (sink_x, sink_y)
+                sink_options['mass_str'] = sink_mass_unit_str
+                sink_options['age_str'] = time_unit_str
+                sink_options['position_str'] = position_unit_str
+                sink_options['velocity_str'] = velocity_unit_str
+                plot_options['sink_options'] = sink_options
     
     x_pos = plot_options['x_pos']
     y_pos = plot_options['y_pos']
