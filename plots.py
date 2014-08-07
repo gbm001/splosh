@@ -496,6 +496,16 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
                 sink_options['age_str'] = time_unit_str
                 sink_options['position_str'] = position_unit_str
                 sink_options['velocity_str'] = velocity_unit_str
+                sink_options['sink_marker'] = shared.config.get_safe(
+                    'opts', 'sink_marker')
+                sink_options['sink_face_colour'] = shared.config.get_safe(
+                    'opts', 'sink_face_colour')
+                sink_options['sink_edge_colour'] = shared.config.get_safe(
+                    'opts', 'sink_edge_colour')
+                sink_options['sink_marker_size'] = shared.config.get_safe(
+                    'opts', 'sink_marker_size')
+                sink_options['sink_marker_edge_width'] = shared.config.get_safe(
+                    'opts', 'sink_marker_edge_width')
                 plot_options['sink_options'] = sink_options
     
     # We now have a set of plot options (cached or newly created), set up plots

@@ -83,6 +83,41 @@ def init_options(options, shared):
             'print_call': lookup_single}
     subopts.append(SubOption('Show sink particles on rendered plots',
                              single_flip_option, info))
+    info = {'config_item': 'sink_marker',
+            'string_list': ['point', 'star', 'pixel', 'x', 'plus', 'circle',
+                            'square', 'pentagon', 'hexagon1', 'hexagon2',
+                            'diamond', 'thin diamond', '<no value>'],
+            'prompt': "Select a sink particle symbol (or '<no value>'"
+                      " for backend default option): ",
+            'print_call': lookup_single}
+    subopts.append(SubOption("set sink particle symbol",
+                             single_string_option, info))
+    info = {'config_item': 'sink_face_colour',
+            'prompt': 'Select a sink particle face colour',
+            'print_call': lookup_single}
+    subopts.append(SubOption('set sink particle face colour',
+                             colour_option, info))
+    info = {'config_item': 'sink_edge_colour',
+            'prompt': 'Select a sink particle edge colour',
+            'print_call': lookup_single}
+    subopts.append(SubOption('set sink particle edge colour',
+                             colour_option, info))
+    info = {'config_item': 'sink_marker_size', 'type':'float',
+            'non_numeric': ['<no value>'],
+            'prompt': "Enter sink particle symbol size (or '<no value>'"
+                      " for backend default)\n"
+                      "Negative numbers are in terms of the backend default",
+                      'print_call': lookup_single}
+    subopts.append(SubOption('set sink particle symbol size',
+                             single_numeric_option, info))
+    info = {'config_item': 'sink_marker_edge_width', 'type':'float',
+            'non_numeric': ['<no value>'],
+            'prompt': "Enter sink particle symbol edge width (or '<no value>'"
+                      " for backend default)\n"
+                      "Negative numbers are in terms of the backend default",
+                      'print_call': lookup_single}
+    subopts.append(SubOption('set sink particle symbol edge width',
+                             single_numeric_option, info))
     info = {'config_item': 'weighting', 'flip_opts': ['volume', 'mass'],
             'print_call': lookup_single}
     subopts.append(SubOption('Weighting of histograms (not y-axis density)',
@@ -155,8 +190,7 @@ def init_options(options, shared):
             'prompt': 'Enter number of pixels', 'print_call': lookup_single}
     subopts.append(SubOption('set number of pixels',
                              single_numeric_option, info))
-    info = {'config_item': 'cmap', 'type':'string',
-            'string_list': shared.cmaps,
+    info = {'config_item': 'cmap', 'string_list': shared.cmaps,
             'prompt': 'Select a colour map', 'print_call': lookup_single}
     subopts.append(SubOption('change colour scheme',
                              single_string_option, info))
@@ -247,7 +281,9 @@ def lookup_single(shared, config_section, info):
     Lookup a single option from the config, and return it
     formatted as a string
     """
-    cur_value = shared.config.get(config_section, info['config_item'])
+    cur_value = shared.config.get_safe(config_section, info['config_item'])
+    if cur_value is None:
+        cur_value = '<no value>'
     return '[ {} ]'.format(cur_value)
 
 
@@ -275,7 +311,10 @@ def single_numeric_option(shared, config_section, info):
     """
     from numpy import isfinite
     config = shared.config
-    cur_value = config.get(config_section, info['config_item'])
+    cur_value = config.get_safe(config_section, info['config_item'])
+    if cur_value is None:
+        cur_value = '<no value>'
+    
     non_numeric = []
     if 'non_numeric' in info:
         for item in info['non_numeric']:
@@ -297,9 +336,18 @@ def single_numeric_option(shared, config_section, info):
             return
         if 'numeric_limits' in info:
             min_val, max_val = info['numeric_limits']
-            if not (min_val <= new_value <= max_val):
-                print('Out of range!')
-                return
+            if min_val is None:
+                if not (new_value <= max_val):
+                    print('Out of range!')
+                    return
+            if max_val is None:
+                if not (min_val <= new_value):
+                    print('Out of range!')
+                    return
+            else:
+                if not (min_val <= new_value <= max_val):
+                    print('Out of range!')
+                    return
     elif info['type'] == 'float':
         try:
             new_value = float(input_string)
@@ -308,13 +356,26 @@ def single_numeric_option(shared, config_section, info):
             return
         if 'numeric_limits' in info:
             min_val, max_val = info['numeric_limits']
-            if not (min_val <= new_value <= max_val):
-                print('Out of range!')
-                return
+            if min_val is None:
+                if not (new_value <= max_val):
+                    print('Out of range!')
+                    return
+            if max_val is None:
+                if not (min_val <= new_value):
+                    print('Out of range!')
+                    return
+            else:
+                if not (min_val <= new_value <= max_val):
+                    print('Out of range!')
+                    return
     else:
         raise ValueError('Unknown type to set in single_numeric_option!')
     
-    config.set(config_section, info['config_item'], str(new_value))
+    if (input_string == '<no value>'):
+        # Can only happen if '<no value>' in non_numeric list
+        config.remove_safe(config_section, info['config_item'])
+    else:
+        config.set(config_section, info['config_item'], str(new_value))
     
     print(' >> Option set to {}'.format(new_value))
     
@@ -330,7 +391,9 @@ def single_string_option(shared, config_section, info):
         print('Acceptable values:')
         print(', '.join(info['string_list']))
     
-    cur_value = shared.config.get(config_section, info['config_item'])
+    cur_value = shared.config.get_safe(config_section, info['config_item'])
+    if cur_value is None:
+        cur_value = '<no value>'
     if 'prompt' in info:
         input_string = input(info['prompt']+' [default={}]: '.format(cur_value))
     else:
@@ -338,17 +401,100 @@ def single_string_option(shared, config_section, info):
     input_string = input_string.strip()
     
     if not input_string:
-        input_string = cur_value
+        if cur_value == '<no value>':
+            return
+        else:
+            input_string = cur_value
     
     if 'string_list' in info:
         if not input_string in info['string_list']:
             print('Invalid value!')
             return
     
-    shared.config.set(config_section, info['config_item'], str(input_string))
+    if (input_string == '<no value>'):
+        # this can only happen if 'no value' is 
+        shared.config.remove_safe(config_section, info['config_item'])
+    else:
+        shared.config.set(config_section, info['config_item'], str(input_string))
     
     print(' >> Option set to {}'.format(input_string))
+
+
+def colour_option(shared, config_section, info):
+    """
+    Accept a colour specification in either colour name, hex code or RGB(A)
+    tuple form
+    """
+    import ast
     
+    colour_list = ['default', 'none', 'blue', 'green', 'red', 'cyan',
+                   'magenta', 'yellow', 'black', 'white']
+    
+    cur_value = shared.config.get_safe(config_section, info['config_item'],
+                                       default='<no value>')
+    
+    print('Enter a colour using either a colour name, RBG(A) tuple or hex code')
+    print('Valid colours: blue, green, red, cyan, magenta, yellow, black, white')
+    print('Enter RGB(A) colours as e.g. (0, 127, 255) or (0, 127, 255, 127)')
+    print('Enter hex colours as e.g. #00CCFF')
+    print("Enter '<no value>' to use backend default")
+    
+    if 'prompt' in info:
+        input_string = input(info['prompt']+' [default={}]: '.format(cur_value))
+    else:
+        input_string = input('Enter value [default={}]: '.format(cur_value))
+    
+    input_string = input_string.strip()
+    
+    if not input_string:
+        if cur_value == '<no value>':
+            return
+        input_string = cur_value
+    
+    if input_string == '<no value>':
+        shared.config.remove_safe(config_section, info['config_item'])
+        print(' >> Colour option removed')
+        return
+    elif input_string in colour_list:
+        pass # colour code
+    elif input_string[0] == '#':
+        # Hex colour code
+        if len(input_string) != 7:
+            print(' >> Invalid hex code!')
+            return
+        for char in input_string[1:]:
+            if char not in '0123456789ABCDEF':
+                print(' >> Invalid hex code!')
+                return
+    elif input_string[0] == '(' or input_string[0] == '[':
+        # RGB(A) tuple
+        try:
+            colour_tuple = ast.literal_eval(input_string)
+        except SyntaxError:
+            print(' >> Invalid RGB(A) tuple!')
+            return
+        if not isinstance(colour_tuple, (list, tuple)):
+            print(' >> Invalid RGB(A) tuple!')
+            return
+        if not (3 <= len(colour_tuple) <= 4):
+            print(' >> Invalid RGB(A) tuple!')
+            return
+        for item in colour_tuple:
+            if isinstance(item, (int, long)) and (0 <= item <= 255):
+                pass
+            else:
+                print('RBG(A) colour out of range (0->255)!')
+                return
+        input_string = str(tuple(colour_tuple))
+                
+    else:
+        print(' >> Invalid colour choice!!')
+        return
+    
+    shared.config.set(config_section, info['config_item'], input_string)
+    
+    print(' >> Colour set to {}'.format(input_string))
+
 
 def instructions(*args):
     """

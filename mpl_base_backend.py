@@ -17,6 +17,43 @@ def ten_to_ticker_func(x, pos):
 
 ten_to_formatter = FuncFormatter(ten_to_ticker_func)
 
+def decode_colour(colour_string):
+    """
+    Helper function to convert (valid) colour code; either a name,
+    hex code or RGB(A) tuple stored as a string; special value 'none' to
+    produce fully transparent colour.
+    """
+    import ast
+    if colour_string is None:
+        return 'black' # default
+    if colour_string == 'none':
+        return (0, 0, 0, 0)
+    if isinstance(colour_string, basestring):
+        # Already a string
+        return colour_string
+    return ast.literal_eval(colour_string) # either a colour name,
+                                           # hex code or RGB(A) tuple
+
+def decode_symbol(symbol_string):
+    """
+    Helper function to decode (valid) symbol codes into matplotlib marker
+    codes.
+    """
+    symbol_dict = {'point': '.', 'pixel': ',', 'circle': 'o', 'square': 's',
+                   'pentagon': 'p', 'star': '*', 'hexagon1': 'h',
+                   'hexagon2': 'H', 'plus': '+', 'x': 'x', 'diamond': 'D',
+                   'thin diamond': 'd'}
+    if symbol_string is None:
+        return 'o' # Default symbol
+    if symbol_string not in symbol_dict:
+        print(">> Symbol type '{}' not supported by backend".format(
+            symbol_string))
+        print(">> Falling back to 'point' symbol")
+        return '.'
+    else:
+        return symbol_dict[symbol_string]
+
+
 class BackendMPL():
     """
     Base class for matplotlib backends
@@ -29,6 +66,7 @@ class BackendMPL():
         self.plot_options = None
         import matplotlib
         matplotlib.rcParams['text.usetex'] = False
+        self.mpl_marker_size = matplotlib.rcParams['lines.markersize']
     
     def on_exit(self):
         """
@@ -89,10 +127,13 @@ class BackendMPL():
             sink_options = self.plot_options['sink_options']
             nsink = sink_data['mass'].size
             sink_x, sink_y = sink_options['sink_xy']
-            sink_mask = [False] * nsink
-            for i in range(nsink):
-                if (xmin <= sink_x[i] <= xmax) and (ymin <= sink_y[i] <= ymax):
-                    sink_mask[i] = True
+            #sink_mask = [False] * nsink
+            #for i in range(nsink):
+                #if (xmin <= sink_x[i] <= xmax) and (ymin <= sink_y[i] <= ymax):
+                    #sink_mask[i] = True
+            sink_mask = np.logical_and(
+                np.logical_and(xmin <= sink_x, sink_x <= xmax),
+                np.logical_and(ymin <= sink_y, sink_y <= ymax))
             print('Plotting {} of {} sinks'.format(sum(sink_mask), nsink))
             
             print('Sink data:')
@@ -116,6 +157,27 @@ class BackendMPL():
                     s_position[i][0], s_position[i][1], s_position[i][2],
                     s_velocity[i][0], s_velocity[i][1], s_velocity[i][2],
                     s_age[i]))
+            
+            sink_plot_dict = {}
+            sink_plot_dict['marker'] = decode_symbol(
+                sink_options['sink_marker'])
+            sink_plot_dict['markerfacecolor'] = decode_colour(
+                sink_options['sink_face_colour'])
+            if sink_options['sink_edge_colour'] is not None:
+                sink_plot_dict['markeredgecolor'] = decode_colour(
+                    sink_options['sink_edge_colour'])
+            if sink_options['sink_marker_size'] is not None:
+                marker_size = float(sink_options['sink_marker_size'])
+                if (marker_size < 0.0):
+                    marker_size = (-marker_size * self.mpl_marker_size)
+                sink_plot_dict['markersize'] = marker_size
+            if sink_options['sink_marker_edge_width'] is not None:
+                marker_ew = float(sink_options['sink_marker_edge_width'])
+                if (marker_ew < 0.0):
+                    marker_ew = (-marker_ew * self.mpl_marker_size)
+                sink_plot_dict['markeredgewidth'] = marker_ew
+            sink_plot_x = sink_x[sink_mask]
+            sink_plot_y = sink_y[sink_mask]
         
         # Create figure
         ax = self.fig.add_subplot(111)
@@ -277,6 +339,11 @@ class BackendMPL():
         
         if clim is not None:
             self.current_clim = clim
+        
+        # Plot sinks
+        if sink_data is not None:
+            ax.plot(sink_plot_x, sink_plot_y, linestyle='None',
+                    scalex=False, scaley=False, **sink_plot_dict)
         
         # Plot styling
         #self.fig.set_tight_layout = True
