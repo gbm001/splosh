@@ -271,11 +271,8 @@ def get_render_plot(x_field, x_index, x_unit,
         
         if proj:
             # account for integral over 0->1 instead of physical units
-            if shared.config.has_option('units', 'column'):
-                unit_tuple_str = shared.config.get('units', 'column')
-                column_unit, unit_str = ast.literal_eval(unit_tuple_str)
-            else:
-                column_unit = x_unit
+            column_unit, unit_str = shared.config.get_safe_literal(
+                'units', 'column', default=(x_unit, ''))
             xy_fac = step.length_mks / column_unit
             if xy_fac != 1.0:
                 grid_data = grid_data * xy_fac

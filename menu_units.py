@@ -3,7 +3,6 @@ This submodule implements the units submenu.
 """
 
 from __future__ import print_function
-import ast
 
 # input and xrange, Python 3 style
 try:
@@ -17,14 +16,12 @@ def get_unit(shared, unit_name):
     """
     Get a single unit (unit and string) - helper function
     """
-    if (shared.config.get('data', 'use_units') != 'OFF' and
-            shared.config.has_option('units', unit_name)):
-        unit_tuple_str = shared.config.get('units', unit_name)
-        unit_val, unit_str = ast.literal_eval(unit_tuple_str)
-        unit_str = ' [' + unit_str + ']'
-    else:
-        unit_val = 1.0
-        unit_str = ''
+    if (shared.config.get_safe('data', 'use_units') != 'OFF'):
+        unit_val, unit_str = shared.config.get_safe_literal('units', unit_name,
+                                                            default=(1.0, ''))
+        if unit_str:
+            unit_str = ' [' + unit_str + ']'
+    
     return unit_val, unit_str
 
 
@@ -61,40 +58,23 @@ def set_units(shared, *args):
         
         # Find existing limits
         if unit_index == -1:
-            if shared.config.has_option('units', 'column'):
-                unit_tuple_str = shared.config.get('units', 'column')
-                val, unit_str = ast.literal_eval(unit_tuple_str)
-            else:
-                val = 'SAME'
-                unit_str = ''
+            val, unit_str = shared.config.get_safe_literal('units', 'column',
+                                                           default=('SAME', ''))
             prompt = ("Enter multiplier (number to multiply values by),\n"
                       "or SAME to use same units as x/y/z "
                       "[default={}]: ".format(val))
             
         else:
             if unit_index == -2:
-                if shared.config.has_option('units', 'sink_mass'):
-                    unit_tuple_str = shared.config.get('units', 'sink_mass')
-                    val, unit_str = ast.literal_eval(unit_tuple_str)
-                else:
-                    val = 1.0
-                    unit_str = ''
+                val, unit_str = shared.config.get_safe_literal(
+                    'units', 'sink_mass', default=(1.0, ''))
             elif unit_index == 0:
-                if shared.config.has_option('units', 'time'):
-                    unit_tuple_str = shared.config.get('units', 'time')
-                    val, unit_str = ast.literal_eval(unit_tuple_str)
-                else:
-                    val = 1.0
-                    unit_str = ''
+                val, unit_str = shared.config.get_safe_literal(
+                    'units', 'time', default=(1.0, ''))
             else:
                 field = fields[unit_index - 1]
-                if shared.config.has_option('units', '_'+field.name):
-                    unit_tuple_str = shared.config.get('units', '_'+field.name)
-                    val, unit_str = ast.literal_eval(unit_tuple_str)
-                else:
-                    val = 1.0
-                    unit_str = ''
-            
+                val, unit_str = shared.config.get_safe_literal(
+                    'units', '_'+field.name, default=(1.0, ''))
             prompt = ("Enter multiplier (number to multiply values by) "
                       "[default={}]: ".format(val))
         
@@ -102,13 +82,13 @@ def set_units(shared, *args):
             input_string = input(prompt).strip()
             if not input_string:
                 if unit_index == -1 and val == 'SAME':
-                    shared.config.remove_option('units', 'column')
+                    shared.config.remove_safe('units', 'column')
                     return
                 else:
                     new_val = val
                     break
             if unit_index == -1 and input_string == 'SAME':
-                shared.config.remove_option('units', 'column')
+                shared.config.remove_safe('units', 'column')
                 return
             try:
                 new_val = float(input_string)
@@ -158,34 +138,22 @@ def print_units(shared, fields):
     opt_width = max(opt_width, 5)
     
     titles.append('sink mass')
-    if shared.config.has_option('units', 'sink_mass'):
-        unit_tuple_str = shared.config.get('units', 'sink_mass')
-        val, unit_str = ast.literal_eval(unit_tuple_str)
-        val_strs.append(str(val))
-        unit_strs.append(unit_str)
-    else:
-        val_strs.append('1.0')
-        unit_strs.append('NONE')
+    val, unit_str = shared.config.get_safe_literal('units', 'sink_mass',
+                                                   default=(1.0, 'NONE'))
+    vals_strs.append(str(val))
+    unit_strs.append(unit_str)
     
     titles.append('integrated column length')
-    if shared.config.has_option('units', 'column'):
-        unit_tuple_str = shared.config.get('units', 'column')
-        val, unit_str = ast.literal_eval(unit_tuple_str)
-        val_strs.append(str(val))
-        unit_strs.append(unit_str)
-    else:
-        val_strs.append('same as x/y/z')
-        unit_strs.append('NONE')
+    val, unit_str = shared.config.get_safe_literal(
+        'units', 'column', default=('same as x/y/z', 'NONE'))
+    vals_strs.append(str(val))
+    unit_strs.append(unit_str)
     
     titles.append('time')
-    if shared.config.has_option('units', 'time'):
-        unit_tuple_str = shared.config.get('units', 'time')
-        val, unit_str = ast.literal_eval(unit_tuple_str)
-        val_strs.append(str(val))
-        unit_strs.append(unit_str)
-    else:
-        val_strs.append('1.0')
-        unit_strs.append('NONE')
+    val, unit_str = shared.config.get_safe_literal(
+        'units', 'time', default=(1.0, 'NONE'))
+    vals_strs.append(str(val))
+    unit_strs.append(unit_str)
     
     for field in fields:
         if field.name == 'position':
@@ -193,14 +161,10 @@ def print_units(shared, fields):
         else:
             name = field.name
         titles.append(name)
-        if shared.config.has_option('units', '_' + field.name):
-            unit_tuple_str = shared.config.get('units', '_' + field.name)
-            val, unit_str = ast.literal_eval(unit_tuple_str)
-            val_strs.append(str(val))
-            unit_strs.append(unit_str)
-        else:
-            val_strs.append('1.0')
-            unit_strs.append('NONE')
+        val, unit_str = shared.config.get_safe_literal(
+            'units', '_' + field.name, default=(1.0, 'NONE'))
+        val_strs.append(val)
+        unit_strs.append(unit_str)
     
     # Find the maximum length (limits to field_width) of titles,
     # and then maximum min/max length, limited to

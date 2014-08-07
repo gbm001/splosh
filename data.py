@@ -26,7 +26,7 @@ class SharedData():
                             'last_vector':-1,
                             'last_backend_index':0}
         self.config = ConfigOptions()
-        self.limits = configparser.SafeConfigParser()
+        self.limits = SuperSafeConfigParser()
         self.limits.add_section('limits')
         self.limits.add_section('restrict')
         self.field_mappings = []
@@ -67,11 +67,8 @@ class SharedData():
         self.transform_dict = transforms.get_transform_dict()
         
         box_max = np.ones((self.ndim,))
-        if self.config.has_option('units', '_position'):
-            unit_tuple_str = self.config.get('units', '_position')
-            x_unit, x_unit_str = ast.literal_eval(unit_tuple_str)
-        else:
-            x_unit = 1.0
+        x_unit, x_unit_str = self.config.get_safe_literal('units', '_position',
+                                                          default=(1.0, ''))
         self.temp_config['last_z_slice'] = (
             box_max * first_step.length_mks / (2.0 * x_unit))
         
@@ -218,9 +215,49 @@ class FieldMapping():
             self.unit_value, self.extra)
 
 
-class ConfigOptions(configparser.SafeConfigParser):
+class SuperSafeConfigParser(configparser.SafeConfigParser):
     """
-    Class that extends the SafeConfigParser; adds default options
+    Class that extends the SafeConfigParser; adds extra methods
+    """
+    
+    def get_safe(self, section, option, default=None):
+        """
+        Test if such an option exists, safely. If it does, return it,
+        otherwise return the default.
+        """
+        if self.has_section(section) and self.has_option(section, option):
+            return self.get(section, option)
+        return default
+    
+    def get_literal(self, section, option):
+        """
+        Assume option exists; get literal value of option.
+        """
+        return ast.literal_eval(self.get(section, option))
+    
+    def get_safe_literal(self, section, option, default=None):
+        """
+        Test if such an option exists, safely. If it does, return the
+        interpretation of the value as a literal, otherwise return the default.
+        """
+        if self.has_section(section) and self.has_option(section, option):
+            return ast.literal_eval(self.get(section, option))
+        return default
+    
+    def remove_safe(self, section, option):
+        """
+        Test if such an option exists, safely. If it does, remove it.
+        Returns 'True' if an option exists and is removed, else False.
+        """
+        if self.has_section(section) and self.has_option(section, option):
+            self.remove_option(section, option)
+            return True
+        return False
+
+
+class ConfigOptions(SuperSafeConfigParser):
+    """
+    Class that extends the SuperSafeConfigParser; adds default options
     """
     def __init__(self):
         """
@@ -261,7 +298,7 @@ class ConfigOptions(configparser.SafeConfigParser):
         self.add_section('extra')
         
         self.add_section('transforms')
-        
+
 
 def test_field_name(field_name):
     """

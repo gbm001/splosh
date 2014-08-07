@@ -287,7 +287,6 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     from . import analysis
     from . import menu_units
     import numpy as np
-    import ast
     
     draw_limits = dict(plot_limits)
     data_limits = list(data_limits)
@@ -295,79 +294,31 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     # Get fields
     if x_axis is not None:
         x_field = shared.field_mappings[x_axis].field
-        #has_x_unit = shared.config.has_option('units', '_'+x_field.name)
-    #else:
-        #has_x_unit = False
     if y_axis is not None:
         y_field = shared.field_mappings[y_axis].field
-        #has_y_unit = shared.config.has_option('units', '_'+y_field.name)
-    #else:
-        #has_y_unit = False
     if render is not None:
         render_field = shared.field_mappings[render].field
-        #has_render_unit = shared.config.has_option(
-            #'units', '_'+render_field.name)
     else:
         render_field = None
-        #has_render_unit = False
     if vector is not None:
         vector_field = shared.field_mappings[vector].field
-        #has_vector_unit = shared.config.has_option(
-            #'units', '_'+vector_field.name)
     else:
         vector_field = None
-        #has_vector_unit = False
-    #has_time_unit = shared.config.has_option('units', 'time')
-    #has_sink_mass_unit = shared.config.has_option('units', 'sink_mass')
-    #if shared.config.get('data', 'use_units') == 'OFF':
-        #has_x_unit = False
-        #has_y_unit = False
-        #has_render_unit = False
-        #has_vector_unit = False
-        #has_time_unit = False
-        #has_sink_mass_unit = False
     
     # Get units
-    #if has_x_unit and x_axis is not None:
-        #unit_tuple_str = shared.config.get('units', '_'+x_field.name)
-        #x_unit, x_unit_str = ast.literal_eval(unit_tuple_str)
-        #x_unit_str = ' [' + x_unit_str + ']'
-    #else:
-        #x_unit = 1.0
-        #x_unit_str = ''
     if x_axis is not None:
         x_unit, x_unit_str = menu_units.get_unit(shared, '_'+x_field.name)
     else:
         x_unit, x_unit_str = (1.0, '')
-    #if has_y_unit and y_axis is not None:
-        #unit_tuple_str = shared.config.get('units', '_'+y_field.name)
-        #y_unit, y_unit_str = ast.literal_eval(unit_tuple_str)
-        #y_unit_str = ' [' + y_unit_str + ']'
-    #else:
-        #y_unit = 1.0
-        #y_unit_str = ''
     if y_axis is not None:
         y_unit, y_unit_str = menu_units.get_unit(shared, '_'+y_field.name)
     else:
         y_unit, y_unit_str = (1.0, '')
-    #if has_render_unit:
-        #unit_tuple_str = shared.config.get('units', '_'+render_field.name)
-        #render_unit, render_unit_str = ast.literal_eval(unit_tuple_str)
-    #else:
-        #render_unit = 1.0
-        #render_unit_str = ''
     if render is not None:
         render_unit, render_unit_str = menu_units.get_unit(
             shared, '_'+render_field.name)
     else:
         render_unit, render_unit_str = (1.0, '')
-    #if has_vector_unit:
-        #unit_tuple_str = shared.config.get('units', '_'+vector_field.name)
-        #vector_unit, vector_unit_str = ast.literal_eval(unit_tuple_str)
-        #vector_unit_str = ' [' + vector_unit_str + ']'
-    #else:
-        #vector_unit = 1.0
-        #vector_unit_str = ''
     if vector is not None:
         vector_unit, vector_unit_str = menu_units.get_unit(
             shared, '_'+render_field.name)
@@ -387,9 +338,11 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     # Set options for plot (title, axes etc)
     step = shared.sim_step_list[step_no]
     if step.data_set is None:
+        # Load data if we do not already have a dataset
         step.load_dataset()
     time = step.time * step.time_mks / time_unit
     if plot_options is None:
+        # Set up default plot options
         plot_options = {}
         plot_options['data_axis'] = None
         plot_options['sink_data'] = None
@@ -409,6 +362,7 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
                     transform_keys['y_transform'].replace(
                         'x', plot_options['ylabel']))
         
+        # Time labels
         if plot_type == 'time':
             plot_options['xlabel'] = 'Time [{}]'.format(time_unit_str)
             plot_options['time_label'] = ''
@@ -417,6 +371,7 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
             time_string = str(rounded_time) + ' ' + time_unit_str
             plot_options['time_label'] = 't={}'.format(time_string)
         
+        # Colourbar options
         if cmap is not None:
             if cmap_invert == 'yes':
                 plot_options['cmap'] = cmap + '_r'
@@ -436,16 +391,14 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
                 plot_options['colourbar'] = True
                 clabel = shared.field_mappings[render].title
                 if proj:
-                    if shared.config.has_option('units', 'column'):
-                        unit_tuple_str = shared.config.get('units', 'column')
-                        c_unit_str = ast.literal_eval(unit_tuple_str)[1]
-                    else:
-                        c_unit_str = render_unit_str
+                    c_unit_str = shared.config.get_safe_literal(
+                        'units', 'column', default=(1.0,position_unit_str))[1]
                     
                     clabel = (r'\int ' + clabel + r' dz' + ' [' +
-                              render_unit_str + r' \times ' + c_unit_str + ']')
+                              render_unit_str[2:-1] + r' \times ' +
+                              c_unit_str[2:-1] + ']')
                 else:
-                    clabel = clabel + '[' + render_unit_str + ']'
+                    clabel = clabel + render_unit_str
                 
                 plot_options['colourbar_label'] = clabel
                 if plot_transforms['render_transform'] is not None:
@@ -486,12 +439,13 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         plot_options['x_pos'] = x_pos
         plot_options['y_pos'] = y_pos
         
+        # Equal scales plot?
         plot_options['aspect'] = 'square_plot'
-        if shared.config.get('page', 'equal_scales') == 'on':
+        if shared.config.get_safe('page', 'equal_scales') == 'on':
             if x_pos and y_pos:
                 plot_options['aspect'] = 'equal'
     
-        # find box length
+        # find box length, set resolution
         if x_pos:
             box_len_x = step.length_mks / x_unit
         else:
@@ -514,8 +468,7 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         
         # Deal with sink data, if present and if we are using it
         if plot_type == 'render':
-            if (shared.config.has_option('opts', 'show_sinks') and
-                    shared.config.get('opts', 'show_sinks') == 'on'):
+            if (shared.config.get_safe('opts', 'show_sinks') == 'on'):
                 sink_data = np.array(step.sink_data)
                 sink_options = {}
                 sink_data['age'] = (sink_data['age'] * step.time_mks /
@@ -545,12 +498,14 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
                 sink_options['velocity_str'] = velocity_unit_str
                 plot_options['sink_options'] = sink_options
     
+    # We now have a set of plot options (cached or newly created), set up plots
     x_pos = plot_options['x_pos']
     y_pos = plot_options['y_pos']
     box_length = plot_options['box_length']
     minmax_res = plot_options['minmax_res']
     resolution = plot_options['resolution']
     
+    # Plot limits
     if x_pos:
         xlim = [0.0, box_length[0]]
         if plot_limits['x_axis'][0] != 'auto':
@@ -565,6 +520,7 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         if plot_limits['y_axis'][1] != 'auto':
             ylim[1] = plot_limits['y_axis'][1]
     
+    # Adjust limits if we are (approximately) maintaining an aspect ratio
     if (shared.config.get('limits', 'aspect_ratio') == 'on' and
         x_pos and y_pos):
         x_len = xlim[1] - xlim[0]
@@ -582,6 +538,7 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
             xlim[0] = min(xlim[0], box_length[0] - y_len)
             xlim[1] = min(xlim[1], box_length[0])
     
+    # Snap position limits to grid
     if x_pos:
         xlim_snap = limits.snap_to_grid(xlim, None, True, False,
                                         box_length, minmax_res)[0]
@@ -724,12 +681,4 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         ret_tuple = (data_list, draw_limits, plot_options)
 
     return ret_tuple
-
-
-
-
-
-
-
-
 

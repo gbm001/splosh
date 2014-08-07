@@ -2,7 +2,6 @@
 This submodule implements limits.
 """
 
-import ast
 import numpy as np
 
 
@@ -29,8 +28,7 @@ def set_current_limits(x_axis, y_axis, render, vector,
         x_title = shared.field_mappings[x_axis].title
         if shared.limits.has_option('limits', x_title):
             # existing limits
-            limits_string = shared.limits.get('limits', x_title)
-            old_x_limits = ast.literal_eval(limits_string)
+            old_x_limits = shared.limits.get_literal('limits', x_title)
             if not np.allclose(old_x_limits, plot_limits['x_axis']):
                 # set new limits
                 shared.limits.set('limits', x_title, repr(plot_limits['x_axis']))
@@ -51,8 +49,7 @@ def set_current_limits(x_axis, y_axis, render, vector,
         y_title = shared.field_mappings[y_axis].title
         if shared.limits.has_option('limits', y_title):
             # existing limits
-            limits_string = shared.limits.get('limits', y_title)
-            old_y_limits = ast.literal_eval(limits_string)
+            old_y_limits = shared.limits.get_literal('limits', y_title)
             if not np.allclose(old_y_limits, plot_limits['y_axis']):
                 # set new limits
                 shared.limits.set('limits', y_title, repr(plot_limits['y_axis']))
@@ -69,8 +66,8 @@ def set_current_limits(x_axis, y_axis, render, vector,
         render_title = shared.field_mappings[render].title
         if shared.limits.has_option('limits', render_title):
             # existing limits
-            limits_string = shared.limits.get('limits', render_title)
-            old_render_limits = ast.literal_eval(limits_string)
+            old_render_limits = shared.limits.get_literal(
+                'limits', render_title)
             if not np.allclose(old_render_limits, plot_limits['render']):
                 # set new limits
                 shared.limits.set('limits', render_title,
@@ -89,8 +86,8 @@ def set_current_limits(x_axis, y_axis, render, vector,
         vector_title = shared.field_mappings[vector].title
         if shared.limits.has_option('limits', vector_title):
             # existing limits
-            limits_string = shared.limits.get('limits', vector_title)
-            old_vector_limits = ast.literal_eval(limits_string)
+            old_vector_limits = shared.limits.get_literal(
+                'limits', vector_title)
             if not np.allclose(old_vector_limits, plot_limits['vector']):
                 # set new limits
                 shared.limits.set('limits', vector_title,
@@ -134,42 +131,37 @@ def get_current_limits(x_axis, x_index, y_axis, y_index, render,
     if not adaptive_coords:
         if x_axis is not None:
             x_title = shared.field_mappings[x_axis].title
-            if shared.limits.has_option('limits', x_title):
-                limits_string = shared.limits.get('limits', x_title)
-                plot_limits['x_axis'] = ast.literal_eval(limits_string)
+            plot_limits['x_axis'] = shared.limits.get_safe_literal(
+                'limits', x_title, default=plot_limits['x_axis'])
         if y_axis is not None:
             y_title = shared.field_mappings[y_axis].title
-            if shared.limits.has_option('limits', y_title):
-                limits_string = shared.limits.get('limits', y_title)
-                plot_limits['y_axis'] = ast.literal_eval(limits_string)
+            plot_limits['y_axis'] = shared.limits.get_safe_literal(
+                'limits', y_title, default=plot_limits['y_axis'])
     
     if render is not None:
         r_title = shared.field_mappings[render].title
-        if shared.limits.has_option('limits', r_title):
-            limits_string = shared.limits.get('limits', r_title)
-            plot_limits['render'] = ast.literal_eval(limits_string)
+        plot_limits['render'] = shared.limits.get_safe_literal(
+            'limits', r_title, default=plot_limits['render'])
 
     if vector is not None:
         v_title = shared.field_mappings[vector].title
-        if shared.limits.has_option('limits', v_title):
-            limits_string = shared.limits.get('limits', v_title)
-            plot_limits['vector'] = ast.literal_eval(limits_string)
+        plot_limits['vector'] = shared.limits.get_literal(
+            'limits', v_title, default=plot_limits['vector'])
     
     # Data limits
     if filter_all:
         for i, field_mapping in enumerate(shared.field_mappings):
             f_title = shared.field_mappings[i].title
             if shared.limits.has_option('restrict', f_title):
-                f_limits_str = shared.limits.get('restrict', f_title)
-                f_limits = list(ast.literal_eval(f_limits_str))
+                f_limits = list(shared.limits.get_literal('restrict', f_title))
                 field = shared.field_mappings[i].field
                 f_name = shared.field_mappings[i].field.name
                 f_index = shared.field_mappings[i].index
                 f_width = shared.field_mappings[i].field.width
-                if (shared.config.get('data', 'use_units') == 'on' and
+                if (shared.config.get_safe('data', 'use_units') == 'on' and
                         shared.config.has_option('units', '_' + field.name)):
-                    unit_tuple_str = shared.config.get('units', '_'+field.name)
-                    unit, unit_str = ast.literal_eval(unit_tuple_str)
+                    unit, unit_str = shared.config.get_literal('units',
+                                                               '_'+field.name)
                     if f_limits[0] != 'none':
                         f_limits[0] = f_limits[0] * unit
                     if f_limits[1] != 'none':

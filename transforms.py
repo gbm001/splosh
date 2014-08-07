@@ -66,10 +66,8 @@ def set_transforms(shared, config_section, *args):
             transform_name = fm.title
         else:
             transform_name = 'q' + key_id + '_transform'
-        if shared.config.has_option('transforms', transform_name):
-            transform_str = shared.config.get('transforms', transform_name)
-        else:
-            transform_str = 'none'
+        transform_str = shared.config.get_safe('transforms', transform_name,
+                                               default='none')
         
         # Offer to change limit
         transform_keys = list(shared.transform_dict.keys())
@@ -119,24 +117,15 @@ def print_transforms(shared):
         if 'position' in field_mapping.field.flags:
             transform_titles.append('(coordinate axis)')
             continue
-        if shared.config.has_option('transforms', field_mapping.title):
-            transform_titles.append(
-                shared.config.get('transforms', field_mapping.title))
-        else:
-            transform_titles.append('none')
+        transform_titles.append(shared.config.get_safe(
+            'transforms', field_mapping.title, default='none'))
     
     titles.append('x-axis')
+    transform_titles.append(shared.config.get_safe(
+        'transforms', 'qx_transform', default='none'))
     titles.append('y-axis')
-    if shared.config.has_option('transforms', 'qx_transform'):
-        transform_titles.append(
-            shared.config.get('transforms', 'qx_transform'))
-    else:
-        transform_titles.append('none')
-    if shared.config.has_option('transforms', 'qy_transform'):
-        transform_titles.append(
-            shared.config.get('transforms', 'qy_transform'))
-    else:
-        transform_titles.append('none')
+    transform_titles.append(shared.config.get_safe(
+        'transforms', 'qy_transform', default='none'))
     
     # Find the maximum length (limits to field_width) of titles,
     # and then transform title length, limited to
@@ -198,35 +187,36 @@ def get_plot_transforms(x_axis, y_axis, render, plot_type, shared):
     if plot_type == 'hist2d':
         # x and y axes
         x_fm_title = shared.field_mappings[x_axis].title
-        if shared.config.has_option('transforms', x_fm_title):
-            x_transform_key = shared.config.get('transforms', x_fm_title)
+        x_transform_key = shared.config.get_safe('transforms', x_fm_title)
+        if x_transform_key is not None:
             x_transform = shared.transform_dict[x_transform_key]
             transform_keys['x_transform'] = x_transform_key
             plot_transforms['x_transform'] = x_transform
         y_fm_title = shared.field_mappings[y_axis].title
-        if shared.config.has_option('transforms', y_fm_title):
-            y_transform_key = shared.config.get('transforms', y_fm_title)
+        y_transform_key = shared.config.get_safe('transforms', y_fm_title)
+        if y_transform_key is not None:
             y_transform = shared.transform_dict[y_transform_key]
             transform_keys['y_transform'] = y_transform_key
             plot_transforms['y_transform'] = y_transform
     elif plot_type == 'render':
         # render axis only
         render_fm_title = shared.field_mappings[render].title
-        if shared.config.has_option('transforms', render_fm_title):
-            render_transform_key = shared.config.get(
-                'transforms', render_fm_title)
+        render_transform_key = shared.config.get_safe('transforms',
+                                                      render_fm_title)
+        if render_transform_key is not None:
             render_transform = shared.transform_dict[render_transform_key]
             transform_keys['render_transform'] = render_transform_key
             plot_transforms['render_transform'] = render_transform
     elif plot_type == 'time':
         # time: y_axis only
         y_fm_title = shared.field_mappings[y_axis].title
-        if shared.config.has_option('transforms', y_fm_title):
-            y_transform_key = shared.config.get('transforms', y_fm_title)
+        y_transform_key = shared.config.get_safe('transforms', y_fm_title)
+        if y_transform_key is not None:
             y_transform = shared.transform_dict[y_transform_key]
             transform_keys['y_transform'] = y_transform_key
             plot_transforms['y_transform'] = y_transform
-        if shared.config.has_option('transforms', 'qx_transform'):
+        qx_transform_key = shared.config.get_safe('transforms', 'qx_transform')
+        if qx_transform_key is not None:
             qx_transform_key = shared.config.get('transforms', 'qx_transform')
             qx_transform = shared.transform_dict[qx_transform_key]
             transform_keys['qx_transform'] = qx_transform_key
@@ -234,18 +224,18 @@ def get_plot_transforms(x_axis, y_axis, render, plot_type, shared):
     else:
         # single axis plot: x_axis only
         x_fm_title = shared.field_mappings[x_axis].title
-        if shared.config.has_option('transforms', x_fm_title):
-            x_transform_key = shared.config.get('transforms', x_fm_title)
+        x_transform_key = shared.config.get_safe('transforms', x_fm_title)
+        if x_transform_key is not None:
             x_transform = shared.transform_dict[x_transform_key]
             transform_keys['x_transform'] = x_transform_key
             plot_transforms['x_transform'] = x_transform
-        if shared.config.has_option('transforms', 'qx_transform'):
-            qx_transform_key = shared.config.get('transforms', 'qx_transform')
+        qx_transform_key = shared.config.get_safe('transforms', 'qx_transform')
+        if qx_transform_key is not None:
             qx_transform = shared.transform_dict[qx_transform_key]
             transform_keys['qx_transform'] = qx_transform_key
             plot_transforms['qx_transform'] = qx_transform
-        if shared.config.has_option('transforms', 'qy_transform'):
-            qy_transform_key = shared.config.get('transforms', 'qy_transform')
+        qy_transform_key = shared.config.get_safe('transforms', 'qy_transform')
+        if qy_transform_key is not None:
             qy_transform = shared.transform_dict[qy_transform_key]
             transform_keys['qy_transform'] = qy_transform_key
             plot_transforms['qy_transform'] = qy_transform

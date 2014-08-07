@@ -3,7 +3,6 @@ This submodule implements the limits submenu.
 """
 
 from __future__ import print_function
-import ast
 
 # input and xrange, Python 3 style
 try:
@@ -45,11 +44,8 @@ def set_limits(shared, config_section, limit_type):
         
         # Find existing limits
         fm = shared.field_mappings[int(input_string) - 1]
-        if shared.limits.has_option(limits_section, fm.title):
-            limits_str = shared.limits.get(limits_section, fm.title)
-            limits = ast.literal_eval(limits_str)
-        else:
-            limits = (default_string, default_string)
+        limits = shared.limits.get_safe_literal(
+            limits_section, fm.title, default=(default_string, default_string))
         
         # Offer to change limit
         prompt = ("Enter minimum value or "
@@ -105,8 +101,7 @@ def set_limits(shared, config_section, limit_type):
         if (new_limits[0] == default_string and
                 new_limits[1] == default_string):
             # Default limits now, so remove from configparser
-            if shared.limits.has_option(limits_section, fm.title):
-                shared.limits.remove_option(limits_section, fm.title)
+            shared.limits.remove_safe(limits_section, fm.title)
         else:
             limits_str = repr(new_limits)
             shared.limits.set(limits_section, fm.title, limits_str)
@@ -137,14 +132,11 @@ def print_limits(shared, limit_type):
     
     for field_mapping in shared.field_mappings:
         titles.append(field_mapping.title)
-        if shared.limits.has_option(limits_section, field_mapping.title):
-            limits_str = shared.limits.get(limits_section, field_mapping.title)
-            limits = ast.literal_eval(limits_str)
-            min_strs.append(str(limits[0]))
-            max_strs.append(str(limits[1]))
-        else:
-            min_strs.append(default_string)
-            max_strs.append(default_string)
+        limit_min, limit_max = shared.limits.get_safe_literal(
+            limits_section, field_mapping.title,
+            default=(default_string, default_string))
+        min_strs.append(str(limit_min))
+        max_strs.append(str(limit_max))
     
     # Find the maximum length (limits to field_width) of titles,
     # and then maximum min/max length, limited to
