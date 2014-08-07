@@ -52,6 +52,7 @@ def get_output_id(output_dir):
 
 def load_output(output_dir):
     import ast
+    import warnings
     from pymses.sources.ramses.output import Vector, Scalar
     """
     Load a RAMSES output and return the RamsesOutput object
@@ -109,7 +110,12 @@ def load_output(output_dir):
     
     if os.path.isfile(sink_file):
         with open(sink_file) as f:
+            warnings.filterwarnings("ignore",
+                                    message="genfromtxt: Empty input file:")
             sink_data = np.genfromtxt(f, delimiter=',', dtype=sink_dtype)
+            if sink_data.ndim == 0:
+                # If we have a single sink, need to reshape to add dimension
+                sink_data = sink_data.reshape(-1)
         ro.info['sink_data'] = sink_data
     else:
         ro.info['sink_data'] = None
