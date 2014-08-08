@@ -136,14 +136,15 @@ class BackendMPL():
                 np.logical_and(ymin <= sink_y, sink_y <= ymax))
             print('Plotting {} of {} sinks'.format(sum(sink_mask), nsink))
             
-            print('Sink data:')
-            fmt_string = (' {:<4s}|{:^12.12s}|{:^42s}|{:^42s}|{:^12s}')
-            print(fmt_string.format(
-                'id',
-                'mass' + sink_options['mass_str'],
-                'position (x,y,z)' + sink_options['position_str'],
-                'velocity (vx,vy,vz)' + sink_options['velocity_str'],
-                'age' + sink_options['age_str']))
+            if nsink > 0:
+                print('Sink data:')
+                fmt_string = (' {:<4s}|{:^12.12s}|{:^42s}|{:^42s}|{:^12s}')
+                print(fmt_string.format(
+                    'id',
+                    'mass' + sink_options['mass_str'],
+                    'position (x,y,z)' + sink_options['position_str'],
+                    'velocity (vx,vy,vz)' + sink_options['velocity_str'],
+                    'age' + sink_options['age_str']))
             s_id = sink_data['id']
             s_mass = sink_data['mass']
             s_position = sink_data['position']

@@ -118,7 +118,7 @@ def load_output(output_dir):
                 sink_data = sink_data.reshape(-1)
         ro.info['sink_data'] = sink_data
     else:
-        ro.info['sink_data'] = None
+        ro.info['sink_data'] = np.array([], dtype=sink_dtype)
     
     return ro
 
