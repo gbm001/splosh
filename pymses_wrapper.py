@@ -185,8 +185,8 @@ def get_code_units_guess(units, field_name):
         code_mks = units['velocity']
     elif field_name == 'P':
         code_mks = units['pressure']
-    #elif field_name == 'E_{rad}':
-        #code_mks = units['pressure']
+    elif field_name == 'E_{rad}':
+        code_mks = units['pressure']
     elif field_name == 'g':
         code_mks = (units['length'] / units['time']**2)
     elif field_name in units:
