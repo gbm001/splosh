@@ -23,7 +23,7 @@ class PythonMathParser():
     Main parser class, implements parsing
     """
     
-    string_chars = string.ascii_letters + '_'
+    string_chars = string.ascii_letters + '_{}'
     number_chars = string.digits + '.'
     single_token_chars = '+-*/^()|'
     precedence_order = [['^'], ['*', '/'], ['+', '-']]
