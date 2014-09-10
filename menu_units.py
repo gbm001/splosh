@@ -140,19 +140,19 @@ def print_units(shared, fields):
     titles.append('sink mass')
     val, unit_str = shared.config.get_safe_literal('units', 'sink_mass',
                                                    default=(1.0, 'NONE'))
-    vals_strs.append(str(val))
+    val_strs.append(str(val))
     unit_strs.append(unit_str)
     
     titles.append('integrated column length')
     val, unit_str = shared.config.get_safe_literal(
         'units', 'column', default=('same as x/y/z', 'NONE'))
-    vals_strs.append(str(val))
+    val_strs.append(str(val))
     unit_strs.append(unit_str)
     
     titles.append('time')
     val, unit_str = shared.config.get_safe_literal(
         'units', 'time', default=(1.0, 'NONE'))
-    vals_strs.append(str(val))
+    val_strs.append(str(val))
     unit_strs.append(unit_str)
     
     for field in fields:
@@ -163,7 +163,7 @@ def print_units(shared, fields):
         titles.append(name)
         val, unit_str = shared.config.get_safe_literal(
             'units', '_' + field.name, default=(1.0, 'NONE'))
-        val_strs.append(val)
+        val_strs.append(str(val))
         unit_strs.append(unit_str)
     
     # Find the maximum length (limits to field_width) of titles,
