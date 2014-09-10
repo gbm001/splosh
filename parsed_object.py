@@ -75,7 +75,10 @@ def walk(input_item):
 def gen_calc(parsed, translate_values,
              unary_dict=__unary_dict, binary_dict=__binary_dict):
     
-    fields, values = zip(*translate_values)
+    if translate_values:
+        fields, values = zip(*translate_values)
+    else:
+        fields, values = [], []
     
     def func(*args, **kwargs):
         if 'item' in kwargs:
@@ -94,6 +97,8 @@ def gen_calc(parsed, translate_values,
         elif isinstance(item, float):
             return item
         else:
+            if isinstance(item, list):
+                item = item[0]
             index = fields.index(item)
             if callable(values[index]):
                 return values[index](*args)

@@ -36,13 +36,15 @@ class PythonMathParser():
         self.locals_list = locals_list
     
     def parse(self, expression):
-        """Parse the input expression, return a ParsedObject object"""
+        """Parse the input expression, return a nested list parsed object"""
         expression = expression.replace('**', '^')
         
         tokens = self.tokenize(expression)
         
         nodes = self.build_nodes(tokens)
         
+        if isinstance(nodes[0], str):
+            nodes[0] = [nodes[0]]
         return nodes[0]
         
     def tokenize(self, expression):

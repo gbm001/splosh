@@ -118,8 +118,8 @@ def add_quantity(shared, name=None, expression=None, no_save=False):
     parser.set_locals(locals_list + data_constant_names)
     try:
         parsed = parser.parse(expression)
-    except ValueError:
-        print('Invalid expression!')
+    except ValueError as e:
+        print(str(e))
         return
     
     for item in python_math_parser.walk(parsed):

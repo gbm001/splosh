@@ -185,6 +185,8 @@ def get_code_units_guess(units, field_name):
         code_mks = units['velocity']
     elif field_name == 'P':
         code_mks = units['pressure']
+    #elif field_name == 'E_{rad}':
+        #code_mks = units['pressure']
     elif field_name == 'g':
         code_mks = (units['length'] / units['time']**2)
     elif field_name in units:
@@ -978,5 +980,8 @@ def calc_units_mks(shared, field):
     mks = python_math_parser.gen_calc(
         parsed, lookup_table, unary_dict=unit_unary_dict,
         binary_dict=unit_binary_dict)()
-    field.code_mks = mks.val
+    if hasattr(mks, 'val'):
+        field.code_mks = mks.val
+    else:
+        field.code_mks = 1.0
 
