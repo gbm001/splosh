@@ -111,7 +111,7 @@ class BackendStream():
             else:
                 qy_transform = None
             
-            if plot_type == 'hist1d':
+            if plot_type.properties['plot_type'] == 'hist1d':
                 counts, bins, extra_info = self.data_list
                 
                 if qy_transform is not None:
@@ -122,7 +122,7 @@ class BackendStream():
                     self.data_array[i, :] = [bins[i], counts[i]]
                 self.data_array[-1, :] = (bins[-1], 0.0)
         
-            elif plot_type == 'power_spectrum':
+            elif plot_type.properties['plot_type'] == 'power_spectrum':
                 
                 x = self.data_list[0]
                 y = self.data_list[1]
