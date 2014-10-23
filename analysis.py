@@ -75,7 +75,7 @@ def get_histogram2d(x_field, x_index, x_unit, x_pos,
             data_array, weights, (bins_x, bins_y) = wf.get_sample_data(
                 x_field, x_index, xlim,
                 y_field, y_index, ylim,
-                resolution, data_limits, step, shared)
+                None, None, resolution, data_limits, step, shared)
         else:
             data_array, weights = wf.get_cell_data(
                 x_field, x_index, y_field, y_index, data_limits, step, shared)
@@ -263,19 +263,28 @@ def get_render_plot(x_field, x_index, x_unit,
                 zlim = [min_f, max_f]
         
         # Get grid data WITHOUT render_transform: transform later
-        grid_data = wf.get_grid_data(
-                x_field, x_index, xlim, y_field, y_index, ylim, zlim,
-                render_field, render_index, render_fac, None,
-                vector_field, vector_fac, data_limits,
-                proj, resolution, z_slice, step, shared)
+        if shared.ndim==1:
+            raise ValueError('Not done for 1D yet!')
+        elif shared.ndim==2:
+            grid_data, weights, bins = wf.get_sample_data(
+                x_field, x_index, xlim,
+                y_field, y_index, ylim,
+                render_field, render_index,
+                resolution, data_limits, step, shared)
+        else:
+            grid_data = wf.get_grid_data(
+                    x_field, x_index, xlim, y_field, y_index, ylim, zlim,
+                    render_field, render_index, render_fac, None,
+                    vector_field, vector_fac, data_limits,
+                    proj, resolution, z_slice, step, shared)
         
-        if proj:
-            # account for integral over 0->1 instead of physical units
-            column_unit, unit_str = shared.config.get_safe_literal(
-                'units', 'column', default=(x_unit, ''))
-            xy_fac = step.length_mks / column_unit
-            if xy_fac != 1.0:
-                grid_data = grid_data * xy_fac
+            if proj:
+                # account for integral over 0->1 instead of physical units
+                column_unit, unit_str = shared.config.get_safe_literal(
+                    'units', 'column', default=(x_unit, ''))
+                xy_fac = step.length_mks / column_unit
+                if xy_fac != 1.0:
+                    grid_data = grid_data * xy_fac
         
         if plot_transforms['render_transform'] is not None:
             grid_data = plot_transforms['render_transform'][0](grid_data)
@@ -362,7 +371,7 @@ def get_box_data(field, index, unit, resolution, transform,
     box_length = step.box_length
     
     data_array, weights, bins = wf.get_sample_data(
-            None, None, None, field, index, None,
+            None, None, None, field, index, None, None, None,
             resolution, data_limits, step, shared)
     
     # Scale to units

@@ -7,12 +7,26 @@ import pymses
 import os
 import gc
 import numpy as np
-    
-sink_dtype = np.dtype([('id', np.int_),
-                       ('mass', np.float_),
-                       ('position', (np.float_, 3)),
-                       ('velocity', (np.float_, 3)),
-                       ('age', np.float_)])
+
+range = xrange
+
+sink_1d_dtype = np.dtype([('id', np.int_),
+                          ('mass', np.float_),
+                          ('position', (np.float_, 1)),
+                          ('velocity', (np.float_, 1)),
+                          ('age', np.float_)])
+
+sink_2d_dtype = np.dtype([('id', np.int_),
+                          ('mass', np.float_),
+                          ('position', (np.float_, 2)),
+                          ('velocity', (np.float_, 2)),
+                          ('age', np.float_)])
+
+sink_3d_dtype = np.dtype([('id', np.int_),
+                          ('mass', np.float_),
+                          ('position', (np.float_, 3)),
+                          ('velocity', (np.float_, 3)),
+                          ('age', np.float_)])
 
 
 def convert_dir_to_RAMSES_args(out_dir):
@@ -107,6 +121,13 @@ def load_output(output_dir):
     # Read the sink file, if present
     sink_file = os.path.join(
         output_dir, 'sink_{0:05d}.csv'.format(output_number))
+    
+    if ro.ndim == 1:
+        sink_dtype = sink_1d_dtype
+    elif ro.ndim == 2:
+        sink_dtype = sink_2d_dtype
+    else:
+        sink_dtype = sink_3d_dtype
     
     if os.path.isfile(sink_file):
         with open(sink_file) as f:
@@ -306,6 +327,8 @@ def get_cell_data(x_field, x_index, y_field, y_index,
 
     # First, construct region filter - check for 'position' limits
     
+    ndim = shared.ndim
+    
     fields = []
     if x_field is not None:
         fields.append(x_field)
@@ -375,9 +398,9 @@ def get_cell_data(x_field, x_index, y_field, y_index,
         data_array_list.append(temp_data_array)
         
         if mass_weighted:
-            weights_list.append(cells.get_sizes()**3 * cells['rho'])
+            weights_list.append(cells.get_sizes()**ndim * cells['rho'])
         else:
-            weights_list.append(cells.get_sizes()**3)
+            weights_list.append(cells.get_sizes()**ndim)
         
         cells = None
     
@@ -396,6 +419,7 @@ def get_cell_data(x_field, x_index, y_field, y_index,
 
 def get_sample_data(x_field, x_index, xlim,
                     y_field, y_index, ylim,
+                    render_field, render_index,
                     resolution, data_limits, step, shared):
     """
     Obtain sample data for x_axis and y_axis, filtering with data_limits
@@ -417,6 +441,16 @@ def get_sample_data(x_field, x_index, xlim,
             y_pos = True
         fields.append(y_field)
     
+    if render_field is not None:
+        # Check we have two position axes, and are in 2D
+        if shared.ndim != 2:
+            raise ValueError('Can only do render in get_sample_data in 2D!')
+        if not (x_pos and y_pos):
+            raise ValueError('Need two position axes if using render_field!')
+        if render_field.name == 'position':
+            raise ValueError('Cannot use position for render_field here!')
+        fields.append(render_field)
+    
     # If we are going to filter on a field, we need it!
     for limit in data_limits:
         fields.append(limit['field'])
@@ -437,7 +471,7 @@ def get_sample_data(x_field, x_index, xlim,
     
     # Set up sampling points
     one_d_points = []
-    for i in (0, 1, 2):
+    for i in range(shared.ndim):
         one_d_points.append(np.linspace(0.5, resolution-0.5, resolution) /
                             resolution)
     
@@ -482,8 +516,10 @@ def get_sample_data(x_field, x_index, xlim,
         bins_y = None
     
     x_points = one_d_points[0]
-    y_points = one_d_points[1]
-    z_points = one_d_points[2]
+    if shared.ndim>1:
+        y_points = one_d_points[1]
+    if shared.ndim>2:
+        z_points = one_d_points[2]
     
     # Filter sampling points by data limits
     for limit in data_limits:
@@ -526,9 +562,15 @@ def get_sample_data(x_field, x_index, xlim,
                 if len(z_points) == 0:
                     raise ValueError('Data limits on z axis too restrictive!')
     
-    points = np.vstack(np.meshgrid(x_points,
-                                   y_points,
-                                   z_points)).reshape(3,-1).T
+    if (shared.ndim==1):
+        points = x_points
+    elif (shared.ndim==2):
+        points = np.vstack(np.meshgrid(x_points,
+                                       y_points)).reshape(2,-1).T
+    else:
+        points = np.vstack(np.meshgrid(x_points,
+                                       y_points,
+                                       z_points)).reshape(3,-1).T
     
     # Load data, then creating point dataset
     amr = step.data_set.amr_source(field_list)
@@ -547,6 +589,10 @@ def get_sample_data(x_field, x_index, xlim,
     # Collect data
     if x_field is None and y_field is None:
         raise ValueError('No x or y fields!')
+    elif render_field is not None:
+        data_shape = (x_points.size, y_points.size)
+        reversed_data_shape = tuple(reversed(data_shape))
+        data_array = np.zeros(reversed_data_shape)
     elif x_field is None or y_field is None:
         data_array = np.zeros((sampled_dset.npoints))
         x_data_view = data_array
@@ -557,35 +603,54 @@ def get_sample_data(x_field, x_index, xlim,
         y_data_view = data_array[:, 1].view()
     
     if sampled_dset.npoints > 0:
-        if x_field is not None:
-            if x_field.name=='position':
-                x_data_view[:] = sampled_dset.points[:, x_index]
-            elif x_field.extra is not None:
-                x_data_view[:] = extract_cell_func(x_field, sampled_dset)()
-            else:
-                scalar = (sampled_dset[x_field.name].ndim == 1)
-                if scalar:
-                    x_data_view[:] = sampled_dset[x_field.name]
+        if render_field is None:
+            # Standard sampling
+            if x_field is not None:
+                if x_field.name=='position':
+                    x_data_view[:] = sampled_dset.points[:, x_index]
+                elif x_field.extra is not None:
+                    x_data_view[:] = extract_cell_func(x_field, sampled_dset)()
                 else:
-                    x_data_view[:] = sampled_dset[x_field.name][:, x_index]
+                    scalar = (sampled_dset[x_field.name].ndim == 1)
+                    if scalar:
+                        x_data_view[:] = sampled_dset[x_field.name]
+                    else:
+                        x_data_view[:] = sampled_dset[x_field.name][:, x_index]
+            
+            if y_field is not None:
+                if y_field.name=='position':
+                    y_data_view[:] = sampled_dset.points[:, y_index]
+                elif y_field.extra is not None:
+                    y_data_view[:] = extract_cell_func(y_field, sampled_dset)()
+                else:
+                    scalar = (sampled_dset[y_field.name].ndim == 1)
+                    if scalar:
+                        y_data_view[:] = sampled_dset[y_field.name]
+                    else:
+                        y_data_view[:] = sampled_dset[y_field.name][:, y_index]
         
-        if y_field is not None:
-            if y_field.name=='position':
-                y_data_view[:] = sampled_dset.points[:, y_index]
-            elif y_field.extra is not None:
-                y_data_view[:] = extract_cell_func(y_field, sampled_dset)()
+        else:
+            # 2D render sampling
+            if render_field.name=='position':
+                data_set = sampled_dset.points[:, render_index]
+            elif render_field.extra is not None:
+                data_set = extract_cell_func(y_field, sampled_dset)()
             else:
-                scalar = (sampled_dset[y_field.name].ndim == 1)
+                scalar = (sampled_dset[render_field.name].ndim == 1)
                 if scalar:
-                    y_data_view[:] = sampled_dset[y_field.name]
+                    data_set = sampled_dset[render_field.name]
                 else:
-                    y_data_view[:] = sampled_dset[y_field.name][:, y_index]
+                    data_set = sampled_dset[render_field.name][:, render_index]
+            data_array[:] = data_set.reshape(reversed_data_shape)
     
         # Filter data_set, replacing data of interest with nan wherever the
         # data is outside limits
         value_limits = [x for x in data_limits if x['name'] != 'position']
         if value_limits:
-            mask = np.empty_like(x_data_view, np.bool_)
+            if render_field is None:
+                mask = np.empty_like(x_data_view, np.bool_)
+            else:
+                mask = np.empty_like(data_array, np.bool_)
             mask[:] = True
             for limit in value_limits:
                 name = limit['name']
@@ -617,8 +682,11 @@ def get_sample_data(x_field, x_index, xlim,
                     elif max_f != 'none':
                         filt_func = lambda dset: (dset[name][index] <= max_f)
                 mask = np.logical_and(mask, filt_func(sampled_dset))
-            x_data_view[mask] = float('nan')
-            y_data_view[mask] = float('nan')
+            if render_field is None:
+                x_data_view[mask] = float('nan')
+                y_data_view[mask] = float('nan')
+            else:
+                data_array[mask] = float('nan')
     
     if mass_weighted:
         weights = sampled_dset['rho']
@@ -639,8 +707,11 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim, zlim,
     
     multiprocessing = (shared.config.get('opts', 'multiprocessing') == 'on')
     
+    if shared.ndim!=3:
+        raise ValueError('Can only do get_grid_data for 3D')
+    
     # First, check for 'position' limits
-    z_index = (set([0,1,2]) - set([x_index, y_index])).pop()
+    z_index = (set((0, 1, 2)) - set([x_index, y_index])).pop()
     z_axis_name = ['x', 'y', 'z'][z_index]
     up_axis_name = ['x', 'y', 'z'][y_index]
     
@@ -735,16 +806,16 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim, zlim,
     if proj:
         # Raytraced integrated plot
         cam = Camera(center=box_centre, line_of_sight_axis=z_axis_name,
-                    region_size=box_size_xy, up_vector=up_axis_name,
-                    distance=distance, far_cut_depth=far_cut_depth,
-                    map_max_size=resolution, log_sensitive=False)
+                     region_size=box_size_xy, up_vector=up_axis_name,
+                     distance=distance, far_cut_depth=far_cut_depth,
+                     map_max_size=resolution, log_sensitive=False)
         from pymses.analysis.visualization.raytracing import RayTracer
         rt = RayTracer(step.data_set, field_list)
         mapped_data = rt.process(render_op, cam,
                                  multiprocessing=multiprocessing)
     else:
         # Slice map
-        z_slice = (z_slice / box_length[z_index]) - 0.5 
+        z_slice = (z_slice / box_length[z_index]) - 0.5
         # camera is at box centre
         
         # slice doesn't work if we are precisely along grid spacing.
@@ -752,10 +823,11 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim, zlim,
         if z_slice==0.0:
             z_slice = z_slice + (0.01/resolution)
         elif math.fmod(z_res,1) < 0.01:
-            z_slice = z_slice + (0.01/resolution) * math.copysign(1.0, -z_slice)
+            z_slice = z_slice + ((0.01/resolution) *
+                                 math.copysign(1.0, -z_slice))
         cam = Camera(center=box_centre, line_of_sight_axis=z_axis_name,
-                    region_size=box_size_xy, up_vector=up_axis_name,
-                    map_max_size=resolution, log_sensitive=False)
+                     region_size=box_size_xy, up_vector=up_axis_name,
+                     map_max_size=resolution, log_sensitive=False)
         from pymses.analysis.visualization import SliceMap
         mapped_data = SliceMap(amr, cam, render_op, z=z_slice)
 

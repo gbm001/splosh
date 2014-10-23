@@ -442,7 +442,7 @@ def plotting_options(y_axis, shared):
         vector = None
     
     # otherwise plot rendered plot, possibly with vector plot
-    if shared.config.get('xsec', 'plot_type') == 'cross':
+    if shared.config.get('xsec', 'plot_type') == 'cross' and shared.ndim>2:
         # slice location
         z_index = [0, 1, 2]
         z_index.remove(x_index)
@@ -468,7 +468,7 @@ def plotting_options(y_axis, shared):
             shared.temp_config['last_z_slice'][z_index] = z_slice
     else:
         z_slice = None
-        
+    
     # prompt for backend
     backend = prompt_for_backend(shared)
     if backend is None:
