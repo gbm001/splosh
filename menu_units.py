@@ -16,11 +16,14 @@ def get_unit(shared, unit_name):
     """
     Get a single unit (unit and string) - helper function
     """
-    if (shared.config.get_safe('data', 'use_units') != 'OFF'):
+    if (shared.config.get_safe('data', 'use_units') != 'off'):
         unit_val, unit_str = shared.config.get_safe_literal('units', unit_name,
                                                             default=(1.0, ''))
         if unit_str:
             unit_str = ' [' + unit_str + ']'
+    else:
+        unit_val = 1.0
+        unit_str = ''
     
     return unit_val, unit_str
 
