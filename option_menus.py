@@ -59,7 +59,8 @@ def init_options(options, shared):
     #subopts.append(SubOption('buffering of data on/off'))
     #subopts.append(SubOption('turn calculate extra quantities on/off'))
     info = {'config_item': 'use_units', 'flip_opts': ['off', 'on'],
-            'print_call': lookup_single}
+            'print_call': lookup_single,
+            'post_action': menu_units.post_units_flip}
     subopts.append(SubOption('use physical units', single_flip_option, info))
     subopts.append(SubOption('change physical unit settings',
                               menu_units.set_units))
@@ -300,6 +301,9 @@ def single_flip_option(shared, config_section, info):
         set_value = info['flip_opts'][0]
     config.set(config_section, info['config_item'], set_value)
 
+    if 'post_action' in info:
+        info['post_action'](shared, info)
+    
     print(' >> Option set to {}'.format(set_value))
 
     return
@@ -376,6 +380,9 @@ def single_numeric_option(shared, config_section, info):
         config.remove_safe(config_section, info['config_item'])
     else:
         config.set(config_section, info['config_item'], str(new_value))
+
+    if 'post_action' in info:
+        info['post_action'](shared, info)
     
     print(' >> Option set to {}'.format(new_value))
     
@@ -416,6 +423,9 @@ def single_string_option(shared, config_section, info):
         shared.config.remove_safe(config_section, info['config_item'])
     else:
         shared.config.set(config_section, info['config_item'], str(input_string))
+
+    if 'post_action' in info:
+        info['post_action'](shared, info)
     
     print(' >> Option set to {}'.format(input_string))
 
@@ -492,6 +502,9 @@ def colour_option(shared, config_section, info):
         return
     
     shared.config.set(config_section, info['config_item'], input_string)
+
+    if 'post_action' in info:
+        info['post_action'](shared, info)
     
     print(' >> Colour set to {}'.format(input_string))
 

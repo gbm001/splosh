@@ -447,11 +447,17 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     
         # find box length, set resolution
         if x_pos:
-            box_len_x = step.length_mks / x_unit
+            if (shared.config.get_safe('data', 'use_units') != 'off'):
+                box_len_x = step.length_mks / x_unit
+            else:
+                box_len_x = step.box_length[x_index]
         else:
             box_len_x = None
         if y_pos:
-            box_len_y = step.length_mks / y_unit
+            if (shared.config.get_safe('data', 'use_units') != 'off'):
+                box_len_y = step.length_mks / y_unit
+            else:
+                box_len_y = step.box_length[y_index]
         else:
             box_len_y = None
         plot_options['box_length'] = (box_len_x, box_len_y)
@@ -473,10 +479,14 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
                 sink_options = {}
                 sink_data['age'] = (sink_data['age'] * step.time_mks /
                                      time_unit)
-                sink_x = (sink_data['position'][:, x_index] *
-                          step.length_mks / (box_len_x * x_unit))
-                sink_y = (sink_data['position'][:, y_index] *
-                          step.length_mks / (box_len_y * y_unit))
+                if (shared.config.get_safe('data', 'use_units') != 'off'):
+                    sink_x = (sink_data['position'][:, x_index] *
+                            step.length_mks / (box_len_x * x_unit))
+                    sink_y = (sink_data['position'][:, y_index] *
+                            step.length_mks / (box_len_y * y_unit))
+                else:
+                    sink_x = (sink_data['position'][:, x_index] / (box_len_x))
+                    sink_y = (sink_data['position'][:, y_index] / (box_len_y))
                 if plot_transforms['x_transform'] is not None:
                     sink_x[:] = plot_transforms['x_transform'][0](sink_x)
                 if plot_transforms['y_transform'] is not None:
@@ -484,12 +494,13 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
                 
                 if x_unit != y_unit:
                     raise AssertionError('x_unit != y_unit for rendered plot!')
-                sink_data['position'] = (sink_data['position']*step.length_mks /
-                                         (step.box_length * position_unit))
-                sink_data['velocity'] = (sink_data['velocity'] *
-                                         step.velocity_mks / velocity_unit)
-                sink_data['mass'] = (sink_data['mass'] * step.sink_mass_mks /
-                                     sink_mass_unit)
+                if (shared.config.get_safe('data', 'use_units') != 'off'):
+                    sink_data['position'] = (sink_data['position']*step.length_mks /
+                                            (step.box_length * position_unit))
+                    sink_data['velocity'] = (sink_data['velocity'] *
+                                            step.velocity_mks / velocity_unit)
+                    sink_data['mass'] = (sink_data['mass'] * step.sink_mass_mks /
+                                        sink_mass_unit)
                 plot_options['sink_data'] = sink_data
                 sink_options['sink_xy'] = (sink_x, sink_y)
                 sink_options['mass_str'] = sink_mass_unit_str

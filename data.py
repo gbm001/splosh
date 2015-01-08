@@ -69,8 +69,11 @@ class SharedData():
         box_max = np.ones((self.ndim,))
         x_unit, x_unit_str = self.config.get_safe_literal('units', '_position',
                                                           default=(1.0, ''))
-        self.temp_config['last_z_slice'] = (
-            box_max * first_step.length_mks / (2.0 * x_unit))
+        if (self.config.get_safe('data', 'use_units') != 'off'):
+            self.temp_config['last_z_slice'] = (
+                box_max * first_step.length_mks / (2.0 * x_unit))
+        else:
+            self.temp_config['last_z_slice'] = first_step.box_length / 2.0
         
         self.cmaps = plots.get_cmaps()
         

@@ -60,14 +60,21 @@ def get_histogram2d(x_field, x_index, x_unit, x_pos,
     if data_list_pass is None:
         # Get data
         if x_pos:
-            xlim = (np.array(draw_limits['x_axis']) * x_unit *
-                    box_length[x_index] / step.length_mks)
+            if (shared.config.get_safe('data', 'use_units') != 'off'):
+                xlim = (np.array(draw_limits['x_axis']) * x_unit *
+                        box_length[x_index] / step.length_mks)
+            else:
+                xlim = (np.array(draw_limits['x_axis']) * box_length[x_index])
+                
         else:
             xlim = None
         
         if y_pos:
-            ylim = (np.array(draw_limits['y_axis']) * y_unit *
-                    box_length[y_index] / step.length_mks)
+            if (shared.config.get_safe('data', 'use_units') != 'off'):
+                ylim = (np.array(draw_limits['y_axis']) * y_unit *
+                        box_length[y_index] / step.length_mks)
+            else:
+                ylim = (np.array(draw_limits['y_axis']) * box_length[y_index])
         else:
             ylim = None
         
@@ -86,18 +93,24 @@ def get_histogram2d(x_field, x_index, x_unit, x_pos,
         y = data_array[:, 1]
         
         # Scale to units
-        if x_field is not None:
-            x_units = x_field.code_mks / x_unit
-            if x_units != 1.0:
-                x[:] = x * x_units
-        if y_field is not None:
-            y_units = y_field.code_mks / y_unit
-            if y_units != 1.0:
-                y[:] = y * y_units
-        if bins_x is not None:
-            bins_x = bins_x * step.length_mks / x_unit
-        if bins_y is not None:
-            bins_y = bins_y * step.length_mks / y_unit
+        if shared.config.get_safe('data', 'use_units') != 'off':
+            if x_field is not None:
+                x_units = x_field.code_mks / x_unit
+                if x_units != 1.0:
+                    x[:] = x * x_units
+            if y_field is not None:
+                y_units = y_field.code_mks / y_unit
+                if y_units != 1.0:
+                    y[:] = y * y_units
+            if bins_x is not None:
+                bins_x = bins_x * step.length_mks / x_unit
+            if bins_y is not None:
+                bins_y = bins_y * step.length_mks / y_unit
+        else:
+            if bins_x is not None:
+                bins_x = bins_x * box_length[x_index]
+            if bins_y is not None:
+                bins_y = bins_y * box_length[y_index]
         
         # Perform transform
         if (not x_pos) and (x_transform is not None):
@@ -218,19 +231,29 @@ def get_render_plot(x_field, x_index, x_unit,
         # Obtain data
         
         # get code units
-        render_fac = render_field.code_mks / render_unit
+        if shared.config.get_safe('data', 'use_units') != 'off':
+            render_fac = render_field.code_mks / render_unit
+        else:
+            render_fac = 1.0
         if vector_field is not None:
-            vector_fac = vector_field.code_mks / vector_unit
+            if shared.config.get_safe('data', 'use_units') != 'off':
+                vector_fac = vector_field.code_mks / vector_unit
+            else:
+                vector_fac = 1.0
         else:
             vector_fac = None
         
         if (x_unit != y_unit):
             raise ValueError('different units on coordinate axes!')
         
-        xlim = (np.array(draw_limits['x_axis']) * x_unit *
-                    box_length[x_index] / step.length_mks)
-        ylim = (np.array(draw_limits['y_axis']) * y_unit *
-                    box_length[y_index] / step.length_mks)
+        if shared.config.get_safe('data', 'use_units') != 'off':
+            xlim = (np.array(draw_limits['x_axis']) * x_unit *
+                        box_length[x_index] / step.length_mks)
+            ylim = (np.array(draw_limits['y_axis']) * y_unit *
+                        box_length[y_index] / step.length_mks)
+        else:
+            xlim = np.array(draw_limits['x_axis']) * box_length[x_index]
+            ylim = np.array(draw_limits['y_axis']) * box_length[y_index]
         
         # We need to restrict xlim and ylim now, based on data limits
         # and find a zlim
@@ -240,7 +263,10 @@ def get_render_plot(x_field, x_index, x_unit,
         changed_y = False
         for limit in position_limits:
             index = limit['index']
-            code_mks = limit['field'].code_mks
+            if (shared.config.get_safe('data', 'use_units') != 'off'):
+                code_mks = limit['field'].code_mks
+            else:
+                code_mks = 1.0
             min_f, max_f = limit['limits']
             if min_f != 'none':
                 min_f = min_f * step.box_length[index] / code_mks
@@ -282,7 +308,11 @@ def get_render_plot(x_field, x_index, x_unit,
                 # account for integral over 0->1 instead of physical units
                 column_unit, unit_str = shared.config.get_safe_literal(
                     'units', 'column', default=(x_unit, ''))
-                xy_fac = step.length_mks / column_unit
+                if (shared.config.get_safe('data', 'use_units') != 'off'):
+                    xy_fac = step.length_mks / column_unit
+                else:
+                    z_index = (set((0, 1, 2)) - set((x_index, y_index))).pop()
+                    xy_fac = step.box_length[z_index]
                 if xy_fac != 1.0:
                     grid_data = grid_data * xy_fac
         
@@ -290,8 +320,12 @@ def get_render_plot(x_field, x_index, x_unit,
             grid_data = plot_transforms['render_transform'][0](grid_data)
     
         # Plot limits
-        xlim = xlim * step.length_mks / (x_unit * box_length[x_index])
-        ylim = ylim * step.length_mks / (x_unit * box_length[x_index])
+        if (shared.config.get_safe('data', 'use_units') != 'off'):
+            xlim = xlim * step.length_mks / (x_unit * box_length[x_index])
+            ylim = ylim * step.length_mks / (y_unit * box_length[y_index])
+        #else: # Don't think this is required?
+            #xlim = xlim / box_length[x_index]
+            #ylim = ylim / box_length[y_index]
         
         if changed_x:
             xmin, xmax = xlim
@@ -347,10 +381,11 @@ def get_single_data(field, index, unit, transform,
             None, None, field, index, data_limits, step, shared)
     
     # Scale to units
-    if field is not None:
-        units = field.code_mks / unit
-        if units != 1.0:
-            data_array[:] = data_array * units
+    if (shared.config.get_safe('data', 'use_units') != 'off'):
+        if field is not None:
+            units = field.code_mks / unit
+            if units != 1.0:
+                data_array[:] = data_array * units
     
     # Perform transform
     if transform is not None:
@@ -375,10 +410,11 @@ def get_box_data(field, index, unit, resolution, transform,
             resolution, data_limits, step, shared)
     
     # Scale to units
-    if field is not None:
-        units = field.code_mks / unit
-        if units != 1.0:
-            data_array[:] = data_array * units
+    if (shared.config.get_safe('data', 'use_units') != 'off'):
+        if field is not None:
+            units = field.code_mks / unit
+            if units != 1.0:
+                data_array[:] = data_array * units
     
     # Perform transform
     if transform is not None:

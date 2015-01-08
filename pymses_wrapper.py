@@ -525,7 +525,10 @@ def get_sample_data(x_field, x_index, xlim,
     for limit in data_limits:
         if limit['name'] == 'position':
             index = limit['index']
-            code_mks = limit['field'].code_mks
+            if (shared.config.get_safe('data', 'use_units') != 'off'):
+                code_mks = limit['field'].code_mks
+            else:
+                code_mks = 1.0
             min_limit, max_limit = limit['limits']
             if min_limit != 'none':
                 min_limit = min_limit / code_mks
@@ -656,7 +659,10 @@ def get_sample_data(x_field, x_index, xlim,
                 name = limit['name']
                 index = limit['index']
                 min_f, max_f = limit['limits']
-                code_mks = limit['field'].code_mks
+                if (shared.config.get_safe('data', 'use_units') != 'off'):
+                    code_mks = limit['field'].code_mks
+                else:
+                    code_mks = 1.0
                 if min_f != 'none':
                     min_f = min_f / code_mks
                 if max_f != 'none':
@@ -711,7 +717,7 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim, zlim,
         raise ValueError('Can only do get_grid_data for 3D')
     
     # First, check for 'position' limits
-    z_index = (set((0, 1, 2)) - set([x_index, y_index])).pop()
+    z_index = (set((0, 1, 2)) - set((x_index, y_index))).pop()
     z_axis_name = ['x', 'y', 'z'][z_index]
     up_axis_name = ['x', 'y', 'z'][y_index]
     
@@ -855,7 +861,10 @@ def get_region_filter(data_limits, step):
         if limit['name'] == 'position':
             index = limit['index']
             min_limit, max_limit = limit['limits']
-            code_mks = limit['field'].code_mks
+            if (shared.config.get_safe('data', 'use_units') != 'off'):
+                code_mks = limit['field'].code_mks
+            else:
+                code_mks = 1.0
             if min_limit != 'none':
                 min_limit = min_limit / code_mks
             if max_limit != 'none':
@@ -882,7 +891,10 @@ def function_filter_stack(source, data_limits):
             name = limit['name']
             index = limit['index']
             min_f, max_f = limit['limits']
-            code_mks = limit['field'].code_mks
+            if (shared.config.get_safe('data', 'use_units') != 'off'):
+                code_mks = limit['field'].code_mks
+            else:
+                code_mks = 1.0
             if min_f != 'none':
                 min_f = min_f / code_mks
             if max_f != 'none':
@@ -1052,7 +1064,9 @@ def calc_units_mks(shared, field):
     mks = python_math_parser.gen_calc(
         parsed, lookup_table, unary_dict=unit_unary_dict,
         binary_dict=unit_binary_dict)()
-    if hasattr(mks, 'val'):
+    if shared.config.get_safe('data', 'use_units') == 'off':
+        field.code_mks = 1.0
+    elif hasattr(mks, 'val'):
         field.code_mks = mks.val
     else:
         field.code_mks = 1.0

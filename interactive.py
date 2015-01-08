@@ -444,10 +444,7 @@ def plotting_options(y_axis, shared):
     # otherwise plot rendered plot, possibly with vector plot
     if shared.config.get('xsec', 'plot_type') == 'cross' and shared.ndim>2:
         # slice location
-        z_index = [0, 1, 2]
-        z_index.remove(x_index)
-        z_index.remove(y_index)
-        z_index = z_index[0]
+        z_index = (set((0, 1, 2)) - set((x_index, y_index))).pop()
         
         prompt = ('Enter cross-section position [default={}]: ').format(
             shared.temp_config['last_z_slice'][z_index])

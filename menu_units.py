@@ -202,3 +202,21 @@ def reset_units(shared, *args):
     return
 
 
+def post_units_flip(shared, *args):
+    import numpy as np
+    """
+    After 'use_units' option has been changed, reset last_z_slice
+    """
+    
+    first_step = shared.sim_step_list[0]
+    
+    box_max = np.ones((shared.ndim,))
+    x_unit, x_unit_str = shared.config.get_safe_literal('units', '_position',
+                                                        default=(1.0, ''))
+    if (shared.config.get_safe('data', 'use_units') != 'off'):
+        shared.temp_config['last_z_slice'] = (
+            box_max * first_step.length_mks / (2.0 * x_unit))
+    else:
+        shared.temp_config['last_z_slice'] = first_step.box_length / 2.0
+    
+    return
