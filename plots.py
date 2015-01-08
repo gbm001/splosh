@@ -340,7 +340,10 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
     if step.data_set is None:
         # Load data if we do not already have a dataset
         step.load_dataset()
-    time = step.time * step.time_mks / time_unit
+    if (shared.config.get_safe('data', 'use_units') != 'off'):
+        time = step.time * step.time_mks / time_unit
+    else:
+        time = step.time
     if plot_options is None:
         # Set up default plot options
         plot_options = {}
@@ -364,7 +367,10 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         
         # Time labels
         if plot_type == 'time':
-            plot_options['xlabel'] = 'Time [{}]'.format(time_unit_str)
+            if (shared.config.get_safe('data', 'use_units') != 'off'):
+                plot_options['xlabel'] = 'Time [{}]'.format(time_unit_str)
+            else:
+                plot_options['xlabel'] = 'Time'
             plot_options['time_label'] = ''
         else:
             rounded_time = text_helpers.round_to_n(time)
@@ -477,9 +483,9 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
             if (shared.config.get_safe('opts', 'show_sinks') == 'on'):
                 sink_data = np.array(step.sink_data)
                 sink_options = {}
-                sink_data['age'] = (sink_data['age'] * step.time_mks /
-                                     time_unit)
                 if (shared.config.get_safe('data', 'use_units') != 'off'):
+                    sink_data['age'] = (sink_data['age'] * step.time_mks /
+                                        time_unit)
                     sink_x = (sink_data['position'][:, x_index] *
                             step.length_mks / (box_len_x * x_unit))
                     sink_y = (sink_data['position'][:, y_index] *
