@@ -225,7 +225,7 @@ def get_data_constants(ro):
     """
     
     # List of constants, and default values if missing
-    constants_list = [('mu_gas', 2.0)]
+    constants_list = [('mu_gas', 1.0)]
     
     constants_dict = {}
     for const_name, const_default in constants_list:
