@@ -566,7 +566,7 @@ def get_sample_data(x_field, x_index, xlim,
                     raise ValueError('Data limits on z axis too restrictive!')
     
     if (shared.ndim==1):
-        points = x_points
+        points = x_points[:, np.newaxis]
     elif (shared.ndim==2):
         points = np.vstack(np.meshgrid(x_points,
                                        y_points)).reshape(2,-1).T
