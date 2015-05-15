@@ -70,9 +70,11 @@ class BackendStream():
             self.data_array = np.empty((len(xedges)*len(yedges), 3))
             
             k = 0
-            for i, x in enumerate(xedges):
-                for j, y in enumerate(yedges):
-                    self.data_array[k, :] = [xedges[i], yedges[j], counts[i, j]]
+            for i in range(len(xedges)-1):
+                for j in range(len(xedges)-1):
+                    x_cen = 0.5*(xedges[i] + xedges[i+1])
+                    y_cen = 0.5*(yedges[i] + yedges[i+1])
+                    self.data_array[k, :] = [x_cen, y_cen, counts[i,j]]
                     k = k + 1
         
         elif plot_type == 'render':
