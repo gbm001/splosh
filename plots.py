@@ -42,6 +42,10 @@ def plot_fields(x_axis, x_index, y_axis, y_index, render, render_index,
                 base_filename = '{}_hist2d_{}_{:05d}'.format(
                     __code_name.lower(), shared.field_mappings[y_axis].title,
                     file_no)
+            elif plot_type == 'line_plot':
+                base_filename = '{}_grid_{}_{:05d}'.format(
+                    __code_name.lower(), shared.field_mappings[y_axis].title,
+                    file_no)
             else:
                 base_filename = '{}_{}_{}_{:05d}'.format(
                     __code_name.lower(), plot_type.properties['file_ext'],
@@ -422,7 +426,7 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
             x_pos_index = shared.field_mappings[x_axis].index
             y_pos = True
             y_pos_index = shared.field_mappings[y_axis].index
-        elif plot_type == 'hist2d':
+        elif (plot_type == 'hist2d') or (plot_type == 'line_plot'):
             x_flags = shared.field_mappings[x_axis].field.flags
             x_pos = 'position' in x_flags
             x_pos_index = shared.field_mappings[x_axis].index
@@ -591,6 +595,23 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
         
         draw_limits['xy_limits'] = xy_limits
         plot_options['plot_type'] = 'hist2d'
+        
+        ret_tuple = (data_list, draw_limits, plot_options)
+        
+    elif plot_type == 'line_plot':
+        if use_old_data:
+            data_list_pass = backend.data_list
+        else:
+            data_list_pass = None
+        # Data from analysis function
+        data_list, xy_limits = analysis.get_line_plot(
+            x_field, x_index, x_unit, x_pos,
+            y_field, y_index, y_unit, y_pos,
+            resolution, plot_transforms,
+            draw_limits, data_limits, step, shared, data_list_pass)
+        
+        draw_limits['xy_limits'] = xy_limits
+        plot_options['plot_type'] = 'line_plot'
         
         ret_tuple = (data_list, draw_limits, plot_options)
         

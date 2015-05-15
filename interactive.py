@@ -382,8 +382,12 @@ def plotting_options(y_axis, shared):
         backend = prompt_for_backend(shared)
         if backend is None:
             return
+        if shared.ndim == 1:
+            plot_type = 'line_plot'
+        else:
+            plot_type = 'hist2d'
         plots.plot_fields(x_axis, x_index, y_axis, y_index, None, None, None,
-                          'hist2d', None, backend, shared)
+                          plot_type, None, backend, shared)
         shared.temp_config['last_x_axis'] = x_axis
         return
     

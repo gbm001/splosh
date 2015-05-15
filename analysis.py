@@ -209,6 +209,129 @@ def get_histogram2d(x_field, x_index, x_unit, x_pos,
     return [xedges, yedges, counts, min_max_data], xy_limits
 
 
+def get_line_plot(x_field, x_index, x_unit, x_pos,
+                  y_field, y_index, y_unit, y_pos,
+                  resolution, plot_transforms, draw_limits,
+                  data_limits, step, shared, data_list_pass=None):
+    """
+    Obtain line plot of simulation quantity (1D simulations only)
+    One position axis, one quantity axis
+    """
+    from . import wrapper_functions as wf
+    import numpy as np
+    
+    # Box length and transforms
+    box_length = step.box_length
+    x_transform = plot_transforms['x_transform']
+    y_transform = plot_transforms['y_transform']
+    hist_transform = plot_transforms['hist_transform']
+    
+    if data_list_pass is None:
+        # Get data
+        data_array = wf.get_cell_data(x_field, x_index, y_field, y_index,
+                                          data_limits, step, shared)[0]
+        
+        # Save to convenient names
+        x = data_array[:, 0]
+        y = data_array[:, 1]
+        
+        if x_pos:
+            sort_order = np.argsort(x, kind='mergesort')
+        elif y_pos:
+            sort_order = np.argsort(y, kind='mergesort')
+        else:
+            raise ValueError('line_plot without position axis!')
+        
+        # Reorder to increase position axis
+        x[:] = x[sort_order]
+        y[:] = y[sort_order]
+        
+        # Scale to units
+        if shared.config.get_safe('data', 'use_units') != 'off':
+            if x_field is not None:
+                x_units = x_field.code_mks / x_unit
+                if x_units != 1.0:
+                    x[:] = x * x_units
+            if y_field is not None:
+                y_units = y_field.code_mks / y_unit
+                if y_units != 1.0:
+                    y[:] = y * y_units
+        
+        # Perform transform
+        if (not x_pos) and (x_transform is not None):
+            x[:] = x_transform[0](x)
+        if (not y_pos) and (y_transform is not None):
+            y[:] = y_transform[0](y)
+        
+        # Check for invalid data
+        if (not np.isfinite(np.sum(x))) or (not np.isfinite(np.sum(y))):
+            print('Warning - invalidly transformed data skipped!')
+            x_mask = np.isfinite(x)
+            y_mask = np.isfinite(y)
+            mask_values = np.logical_and(x_mask, y_mask)
+            if not np.any(mask_values):
+                raise ValueError('No valid values remaining!')
+            x = x[mask_values]
+            y = y[mask_values]
+    
+        min_max_data = {}
+        min_max_data['x_min'] = x.min()
+        min_max_data['x_max'] = x.max()
+        min_max_data['y_min'] = y.min()
+        min_max_data['y_max'] = y.max()
+        
+        # this may be unnecessary...
+        data_array[:, 0] = x
+        data_array[:, 1] = y
+    
+    else:
+        # Use old data
+        data_array, min_max_data = data_list_pass
+    
+    # Plot limits
+    xmin, xmax = draw_limits['x_axis']
+    ymin, ymax = draw_limits['y_axis']
+    
+    if xmin == 'auto':
+        xmin = min_max_data['x_min']
+    elif x_transform is not None:
+        xmin = x_transform[0](xmin)
+    if xmax == 'auto':
+        xmax = min_max_data['x_max']
+    elif x_transform is not None:
+        xmax = x_transform[0](xmax)
+    
+    if (x_transform is not None) and (xmin > xmax):
+        xmin, xmax = xmax, xmin
+    
+    if ymin == 'auto':
+        ymin = min_max_data['y_min']
+    elif y_transform is not None:
+        ymin = y_transform[0](ymin)
+    if ymax == 'auto':
+        ymax = min_max_data['y_max']
+    elif y_transform is not None:
+        ymax = y_transform[0](ymax)
+    
+    if (y_transform is not None) and (ymin > ymax):
+        ymin, ymax = ymax, ymin
+    
+    if np.allclose(xmin, xmax, rtol=1e-20, atol=1e-100):
+        if draw_limits['x_axis'][0] == 'auto':
+            xmin = bracket_data(xmin, x_transform)[0]
+        if draw_limits['x_axis'][1] == 'auto':
+            xmax = bracket_data(xmax, x_transform)[1]
+    if np.allclose(ymin, ymax, rtol=1e-20, atol=1e-100):
+        if draw_limits['y_axis'][0] == 'auto':
+            ymin = bracket_data(ymin, y_transform)[0]
+        if draw_limits['y_axis'][1] == 'auto':
+            ymax = bracket_data(ymax, y_transform)[1]
+    
+    xy_limits = [[xmin, xmax], [ymin, ymax]]
+    
+    return [data_array, min_max_data], xy_limits
+
+
 def get_render_plot(x_field, x_index, x_unit,
                     y_field, y_index, y_unit,
                     render_field, render_index, render_unit,

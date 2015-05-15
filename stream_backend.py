@@ -61,7 +61,7 @@ class BackendStream():
         
         plot_type = self.plot_options['plot_type']
         
-        if plot_type == 'time':
+        if (plot_type == 'time') or (plot_type == 'line_plot'):
             self.data_array = self.data_list[0]
         
         elif plot_type == 'hist2d':

@@ -211,6 +211,14 @@ class BackendMPL():
                 clim[0] = 0.0
             img.set_clim(clim)
         
+        if plot_type == 'line_plot':
+            x = self.data_list[0][:, 0]
+            y = self.data_list[0][:, 1]
+            line_plot = ax.plot(x, y, 'r+')
+            ax.set_xlim(limits[0])
+            ax.set_ylim(limits[1])
+            clim = None
+        
         elif plot_type == 'render':
             imshow_limits = (limits[0][0], limits[0][1],
                              limits[1][0], limits[1][1])

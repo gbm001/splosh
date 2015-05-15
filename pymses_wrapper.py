@@ -321,7 +321,6 @@ def get_cell_data(x_field, x_index, y_field, y_index,
                   data_limits, step, shared):
     """
     Obtain cell data for x_axis and y_axis, filtering with data_limits
-    Neither axis is a coordinate axis
     """
     from . import extra_quantities
 
@@ -330,10 +329,17 @@ def get_cell_data(x_field, x_index, y_field, y_index,
     ndim = shared.ndim
     
     fields = []
+    x_pos, y_pos = False, False
     if x_field is not None:
-        fields.append(x_field)
+        if x_field.name == 'position':
+            x_pos = True
+        else:
+            fields.append(x_field)
     if y_field is not None:
-        fields.append(y_field)
+        if y_field.name == 'position':
+            y_pos = True
+        else:            
+            fields.append(y_field)
     
     # If we are going to filter on a field, we need it!
     for limit in data_limits:
@@ -378,6 +384,8 @@ def get_cell_data(x_field, x_index, y_field, y_index,
             if x_field is not None:
                 if x_field.extra is not None:
                     x_data_view[:] = extract_cell_func(x_field, cells)()
+                elif x_pos:
+                    x_data_view[:] = cells.points[:, x_index]
                 else:
                     scalar = (cells[x_field.name].ndim == 1)
                     if scalar:
@@ -388,6 +396,8 @@ def get_cell_data(x_field, x_index, y_field, y_index,
             if y_field is not None:
                 if y_field.extra is not None:
                     y_data_view[:] = extract_cell_func(y_field, cells)()
+                elif y_pos:
+                    y_data_view[:] = cells.points[:, y_index]
                 else:
                     scalar = (cells[y_field.name].ndim == 1)
                     if scalar:
