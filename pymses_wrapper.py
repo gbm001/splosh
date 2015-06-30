@@ -98,25 +98,16 @@ def load_output(output_dir):
             field_descr[file_type] = new_info_list
         
         ro.amr_field_descrs_by_file = {ndim_str: field_descr}
-    
-    # Read the info file ourselves because pymses does a crappy job
-    # and misses interesting things
-    info_file = os.path.join(
-        output_dir, 'info_{0:05d}.txt'.format(output_number))
-    
-    with open(info_file) as f:
-        lines = f.readlines()
-    
-    renamed_by_pymses = ['unit_l', 'unit_d', 'unit_t']
-    
-    for line in lines:
-        if line.count('=') == 1:
-            left, right = line.split('=', 1)
-            if (' ' not in left.strip()) and (' ' not in right.strip()):
-                name = left.strip()
-                value = ast.literal_eval(right.strip())
-                if (name not in ro.info) and (name not in renamed_by_pymses):
-                    ro.info[name] = value
+
+    # Scan through the items in ro.info, and if they are a string
+    # try passing them through literal_eval
+    for key in ro.info:
+        if isinstance(ro.info[key], basestring):
+            try:
+                ro.info[key] = ast.literal_eval(ro.info[key])
+            except ValueError:
+                # maybe it really was a string
+                pass
     
     # Read the sink file, if present
     sink_file = os.path.join(
