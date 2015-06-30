@@ -123,7 +123,7 @@ def add_quantity(shared, name=None, expression=None, no_save=False):
         return
     
     for item in python_math_parser.walk(parsed):
-        if isinstance(item[0], str):
+        if isinstance(item[0], basestring):
             if item[0] in data_constant_names:
                 item[0] = shared.data_constants[item[0]]
             else:
@@ -197,7 +197,7 @@ def get_field_names(parsed):
     from ast import literal_eval
     field_names = set()
     for item in python_math_parser.walk(parsed):
-        if isinstance(item[0], str):
+        if isinstance(item[0], basestring):
             name, index, width = literal_eval(item[0])
             field_names.add(name)
 
@@ -211,7 +211,7 @@ def get_field_tuples(parsed):
     from ast import literal_eval
     field_tuples = set()
     for item in python_math_parser.walk(parsed):
-        if isinstance(item[0], str):
+        if isinstance(item[0], basestring):
             name, index, width = literal_eval(item[0])
             field_tuples.add((name, index, width))
 

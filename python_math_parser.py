@@ -43,7 +43,7 @@ class PythonMathParser():
         
         nodes = self.build_nodes(tokens)
         
-        if isinstance(nodes[0], str):
+        if isinstance(nodes[0], basestring):
             nodes[0] = [nodes[0]]
         return nodes[0]
         
@@ -201,7 +201,7 @@ class PythonMathParser():
         """
         
         for i in range(len(tokens)):
-            if (not isinstance(tokens[i], str) and
+            if (not isinstance(tokens[i], basestring) and
                 not isinstance(tokens[i], float)):
                 # recurse
                 self.square_brackets(tokens[i])
@@ -213,7 +213,7 @@ class PythonMathParser():
                 else:
                     next_token = tokens[i+1]
                     if (
-                            isinstance(next_token, str) and
+                            isinstance(next_token, basestring) and
                             next_token in self.single_token_chars):
                         if next_token == '|':
                             raise ValueError("'||' not allowed!")
@@ -235,17 +235,17 @@ class PythonMathParser():
             elif isinstance(token, UnaryOp):
                 #recurse
                 self.unary_plus_minus(token.arg)
-            elif isinstance(token, str) and token in ['-', '+']:
+            elif isinstance(token, basestring) and token in ['-', '+']:
                 # plus/minus
                 unary = False
                 if pos == len(tokens) - 1:
                     raise ValueError('Cannot end with operator!')
-                elif pos == 0 or (isinstance(last_token, str) and
+                elif pos == 0 or (isinstance(last_token, basestring) and
                                   last_token in self.single_token_chars):
                     # unary plus/minus
                     next_token = tokens[pos+1]
                     if (
-                            isinstance(next_token, str) and
+                            isinstance(next_token, basestring) and
                             next_token in self.single_token_chars):
                         raise ValueError('Too many sequential operators!')
                     if token == '+':
@@ -288,7 +288,7 @@ class PythonMathParser():
                     #recurse
                     self.precedence(token.left)
                     self.precedence(token.right)
-                elif isinstance(token, str) and token in cur_prec:
+                elif isinstance(token, basestring) and token in cur_prec:
                     # binary operator
                     if pos == 0 or pos >= len(tokens):
                         raise ValueError("Can't begin or end with "
