@@ -211,7 +211,7 @@ class BackendMPL():
                 clim[0] = 0.0
             img.set_clim(clim)
         
-        if plot_type == 'line_plot':
+        elif plot_type == 'line_plot':
             x = self.data_list[0][:, 0]
             y = self.data_list[0][:, 1]
             line_plot = ax.plot(x, y, 'r+')
