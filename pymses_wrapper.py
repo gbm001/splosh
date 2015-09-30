@@ -756,7 +756,6 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim, zlim,
     box_size = (box_max - box_min)
     box_size_xy = [box_size[x_index], box_size[y_index]]
     
-    zlim = zlim / box_length[z_index]
     distance = 0.5 - zlim[0]
     far_cut_depth = zlim[1] - 0.5
     
