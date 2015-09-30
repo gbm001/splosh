@@ -61,7 +61,7 @@ def init_key_dict(backend):
         key_render)
     key_dict['f'] = render_opt
     key_dict['F'] = render_opt
-    key_dict['i'] = KeyOption('h', 'Invert colour scheme', key_cbar_invert)
+    key_dict['i'] = KeyOption('i', 'Invert colour scheme', key_cbar_invert)
     
     backend.key_dicts['hist2d'] = key_dict
     backend.key_dicts['render'] = key_dict
