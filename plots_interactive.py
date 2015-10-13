@@ -203,7 +203,7 @@ def key_save(backend, axes_name, x, y, key, info):
     y_axis = plot_args['y_axis']
     render = plot_args['render']
     vector = plot_args['vector']
-    plot_limits = dict(plot_args['plot_limits'])
+    plot_limits = plot_args['plot_limits']
     shared = plot_args['shared']
     x_transform = backend.plot_transforms['x_transform']
     y_transform = backend.plot_transforms['y_transform']

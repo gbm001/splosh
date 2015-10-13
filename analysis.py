@@ -446,9 +446,6 @@ def get_render_plot(x_field, x_index, x_unit,
         if (shared.config.get_safe('data', 'use_units') != 'off'):
             xlim = xlim * step.length_mks / (x_unit * box_length[x_index])
             ylim = ylim * step.length_mks / (y_unit * box_length[y_index])
-        #else: # Don't think this is required?
-            #xlim = xlim / box_length[x_index]
-            #ylim = ylim / box_length[y_index]
         
         if changed_x:
             xmin, xmax = xlim
