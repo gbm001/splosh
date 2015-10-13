@@ -714,14 +714,19 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim, zlim,
     
     multiprocessing = (shared.config.get('opts', 'multiprocessing') == 'on')
     
-    if shared.ndim!=3:
+    if shared.ndim != 3:
         raise ValueError('Can only do get_grid_data for 3D')
     
-    # First, check for 'position' limits
+    # Calculate z_index and camera angles
     z_index = (set((0, 1, 2)) - set((x_index, y_index))).pop()
+    if (x_index if x_index > y_index else x_index + 3) - y_index == 1:
+        reverse_x = True
+    else:
+        reverse_x = False
     z_axis_name = ['x', 'y', 'z'][z_index]
     up_axis_name = ['x', 'y', 'z'][y_index]
     
+    # Check for 'position' limits
     if x_field.name != 'position':
         raise ValueError('x field is not a position axis!')
     if y_field.name != 'position':
@@ -839,6 +844,10 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim, zlim,
 
     step.data_set = None
     gc.collect()
+    
+    # Correct for LOS vector being backwards for some x,y indices
+    if reverse_x:
+        mapped_data = np.flipud(mapped_data)
 
     return mapped_data.T
 
