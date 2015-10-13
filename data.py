@@ -11,6 +11,7 @@ try:
 except ImportError:
     import ConfigParser as configparser
 
+
 class SharedData():
     """
     Main shared object for storing runtime information
@@ -20,11 +21,11 @@ class SharedData():
         self.fields_list = []
         self.sim_step_list = []
         self.ndim = 0
-        self.temp_config = {'last_x_axis':-5,
-                            'last_time_axis':-5,
-                            'last_render':-1,
-                            'last_vector':-1,
-                            'last_backend_index':0}
+        self.temp_config = {'last_x_axis': -5,
+                            'last_time_axis': -5,
+                            'last_render': -1,
+                            'last_vector': -1,
+                            'last_backend_index': 0}
         self.config = ConfigOptions()
         self.limits = SuperSafeConfigParser()
         self.limits.add_section('limits')
@@ -41,31 +42,31 @@ class SharedData():
         from . import plots
         from . import transforms
         import numpy as np
-        
+
         # Create the sim_list by loading the output_list directory
         for d in output_list:
             sim_step = SimStep()
             sim_step.output_dir = d
             self.sim_step_list.append(sim_step)
-        
+
         # Load the first data set
         first_step = self.sim_step_list[0]
         first_step.load_dataset()
         self.data_constants = first_step.data_constants
-        
+
         # Determine the available variables
         self.fields_list = wf.get_fields(first_step.data_set)
-        
+
         for field in self.fields_list:
             field.code_mks = wf.get_code_mks(first_step.units, field.name)
-        
+
         # Set some basics
         self.ndim = wf.get_ndim(first_step.data_set)
         if not 1 <= self.ndim <= 3:
             raise ValueError('Invalid number of dimensions!')
-        
+
         self.transform_dict = transforms.get_transform_dict()
-        
+
         box_max = np.ones((self.ndim,))
         x_unit, x_unit_str = self.config.get_safe_literal('units', '_position',
                                                           default=(1.0, ''))
@@ -74,31 +75,30 @@ class SharedData():
                 box_max * first_step.length_mks / (2.0 * x_unit))
         else:
             self.temp_config['last_z_slice'] = first_step.box_length / 2.0
-        
+
         self.cmaps = plots.get_cmaps()
-        
+
         return None
-        
+
     def load_config(self):
         """
         Check for config and limits files in this directory,
         and load them if they exist
         """
-        
-        self.config = ConfigOptions() # Reset to defaults
-        
+
+        self.config = ConfigOptions()  # Reset to defaults
+
         home_conf_dir = os.path.expanduser('~' + os.path.sep + '.splosh')
         global_defaults = os.path.join(home_conf_dir, 'splosh.defaults')
         global_limits = os.path.join(home_conf_dir, 'splosh.limits')
-        
-        defaults_file = os.path.join(self.cwd, 'splosh.defaults')
-        # load defaults (no change if none found)
-        self.config.read([ global_defaults, defaults_file])
-        
-        limits_file = os.path.join(self.cwd, 'splosh.limits')
-        # load limits (no change if none found)
-        self.limits.read([global_limits, limits_file])
 
+        defaults_file = os.path.join(self.cwd, 'splosh.defaults')
+        # Load defaults (no change if none found)
+        self.config.read([global_defaults, defaults_file])
+
+        limits_file = os.path.join(self.cwd, 'splosh.limits')
+        # Load limits (no change if none found)
+        self.limits.read([global_limits, limits_file])
 
     def save_config(self, *args):
         """
@@ -108,7 +108,6 @@ class SharedData():
         with open(defaults_file, 'w') as f:
             self.config.write(f)
         print ('Config saved to {}'.format(defaults_file))
-
 
     def save_config_and_limits(self, *args):
         """
@@ -132,10 +131,10 @@ class SimStep():
         self.output_dir = output_dir
         self.data_set = data_set
         self.data_constants = {}
-    
+
     def __repr__(self):
         return 'SimStep({}, {}, {}, {})'.format(self.time, self.output_dir,
-                                            self.data_set, self.time_mks)
+                                                self.data_set, self.time_mks)
 
     def get_output_id(self):
         """
@@ -146,9 +145,8 @@ class SimStep():
             output_id = None
         else:
             output_id = wrapper_functions.get_output_id(self.output_dir)
-        
+
         return output_id
-            
 
     def load_dataset(self):
         """
@@ -159,14 +157,15 @@ class SimStep():
         # Load the output
         output_dir = self.output_dir
         snapshot = wrapper_functions.load_output(output_dir)
-        
+
         # Update quantities
         self.units = wrapper_functions.get_units(snapshot)
         self.time = wrapper_functions.get_time(snapshot)
         self.data_constants = wrapper_functions.get_data_constants(snapshot)
         self.time_mks = wrapper_functions.get_code_mks(self.units, 'time')
         self.box_length = wrapper_functions.get_box_limits(snapshot)
-        self.length_mks = wrapper_functions.get_code_mks(self.units, 'position')
+        self.length_mks = wrapper_functions.get_code_mks(
+            self.units, 'position')
         self.velocity_mks = self.length_mks / self.time_mks
         self.ndim = wrapper_functions.get_ndim(snapshot)
         self.minmax_res = wrapper_functions.get_minmax_res(snapshot)
@@ -174,7 +173,7 @@ class SimStep():
         self.sink_mass_mks = wrapper_functions.get_code_mks(self.units,
                                                             'sink_mass')
         self.data_set = snapshot
-        
+
         return
 
 
@@ -185,14 +184,15 @@ class DataField():
     def __init__(self, name=None, width=1, flags=None):
         self.name = name
         self.width = width
-        self.extra = None # Parsed expression for extra quantities
+        self.extra = None       # Parsed expression for extra quantities
         if flags is None:
             self.flags = []
         else:
-            self.flags = flags  # special flags for the wrapper to set
-                                # 'position' indicates position-type field,
-                                # 'vector' can be vector plotted
-    
+            # Special flags for the wrapper to set:
+            # 'position' indicates position-type field,
+            # 'vector' can be vector plotted
+            self.flags = flags
+
     def __repr__(self):
         return 'DataField({}, {}, {})'.format(self.name, self.width,
                                               self.flags)
@@ -211,7 +211,7 @@ class FieldMapping():
         self.unit_name = unit_name
         self.unit_value = unit_value
         self.extra = extra
-    
+
     def __repr__(self):
         return 'FieldMapping({}, {}, {}, {}, {}, }{)'.format(
             self.title, self.index, self.field, self.code_mks, self.unit_name,
@@ -222,7 +222,7 @@ class SuperSafeConfigParser(configparser.SafeConfigParser):
     """
     Class that extends the SafeConfigParser; adds extra methods
     """
-    
+
     def get_safe(self, section, option, default=None):
         """
         Test if such an option exists, safely. If it does, return it,
@@ -231,13 +231,13 @@ class SuperSafeConfigParser(configparser.SafeConfigParser):
         if self.has_section(section) and self.has_option(section, option):
             return self.get(section, option)
         return default
-    
+
     def get_literal(self, section, option):
         """
         Assume option exists; get literal value of option.
         """
         return ast.literal_eval(self.get(section, option))
-    
+
     def get_safe_literal(self, section, option, default=None):
         """
         Test if such an option exists, safely. If it does, return the
@@ -246,7 +246,7 @@ class SuperSafeConfigParser(configparser.SafeConfigParser):
         if self.has_section(section) and self.has_option(section, option):
             return ast.literal_eval(self.get(section, option))
         return default
-    
+
     def remove_safe(self, section, option):
         """
         Test if such an option exists, safely. If it does, remove it.
@@ -269,37 +269,37 @@ class ConfigOptions(SuperSafeConfigParser):
         configparser.SafeConfigParser.__init__(self)
         self.add_section('data')
         self.set('data', 'use_units', 'off')
-        
+
         self.add_section('page')
         self.set('page', 'equal_scales', 'on')
-        
+
         self.add_section('opts')
         self.set('opts', 'show_sinks', 'on')
         self.set('opts', 'weighting', 'volume')
         self.set('opts', 'multiprocessing', 'off')
-        
+
         self.add_section('limits')
         self.set('limits', 'adaptive', 'adapt')
         self.set('limits', 'adaptive_coords', 'adapt')
         self.set('limits', 'filter_all', 'off')
         self.set('limits', 'aspect_ratio', 'on')
-        
+
         self.add_section('legend')
-        
+
         self.add_section('render')
         self.set('render', 'resolution', 'auto')
         self.set('render', 'cmap', 'OrRd')
         self.set('render', 'invert', 'no')
-        
+
         self.add_section('vector')
-        
+
         self.add_section('xsec')
         self.set('xsec', 'plot_type', 'proj')
-        
+
         self.add_section('units')
-        
+
         self.add_section('extra')
-        
+
         self.add_section('transforms')
 
 
@@ -309,15 +309,15 @@ def test_field_name(field_name):
     or numbers. If the field name will interfere with this, return False. Also
     x, y, z and 'position' are special 'position' fields and are not permitted.
     """
-    forbidden_field_names=['x', 'y', 'z']
+    forbidden_field_names = ['x', 'y', 'z']
     OK = True
-    
-    if field_name in forbidden_field_names or field_name=='position':
+
+    if field_name in forbidden_field_names or field_name == 'position':
         OK = False
-    
+
     if '_' in field_name:
         last_sec = field_name.rsplit('_', 1)[-1]
         if last_sec.isdigit() or last_sec in forbidden_field_names:
             OK = False
-    
+
     return OK

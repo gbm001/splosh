@@ -12,15 +12,17 @@ try:
 except NameError:
     pass
 
+
 def set_quantities(shared, config_section, *args):
     """
     Set extra quantities to view
     """
-    
+
     while True:
         print_quantities(shared)
         print('(a) Add/edit quantity; (r) Remove quantity; (c) Clear all')
-        input_string = input('Select an action (press enter to exit): ').strip()
+        input_string = input(
+            'Select an action (press enter to exit): ').strip()
         if not input_string:
             return
         elif input_string == 'a':
@@ -41,7 +43,7 @@ def print_quantities(shared):
     from .interactive import window_width
     field_width = (window_width / 2)
     titles = []
-    
+
     print()
     print('Defined data constants:')
     if shared.data_constants:
@@ -50,9 +52,9 @@ def print_quantities(shared):
     else:
         print('    None')
     print()
-    
+
     print('Extra quantities:')
-    
+
     are_any = False
     for i, field_mapping in enumerate(shared.field_mappings):
         if field_mapping.extra is not None:
@@ -77,17 +79,17 @@ def add_quantity(shared, name=None, expression=None, no_save=False):
         input_string = input('[leave blank to cancel]: ').strip()
         if not input_string:
             return
-        
+
         if not input_string.count('=') == 1:
             print(' >> Use one equals sign!')
             return
-        
+
         name, sign, expression = input_string.partition('=')
         name = name.strip()
         expression = expression.strip()
     elif name is None or expression is None:
         raise ValueError('Set both name and expression, or neither!')
-    
+
     extras_list = []
     locals_list = []
     for field_mapping in shared.field_mappings:
@@ -97,23 +99,23 @@ def add_quantity(shared, name=None, expression=None, no_save=False):
         else:
             extras_list.append(field_mapping.title)
             locals_list.append('')
-    
+
     if name in locals_list:
         print(' >> Cannot edit datafile quantity!')
         return
-    
+
     data_constant_names = list(shared.data_constants.keys())
-    
+
     if name in data_constant_names:
         print(' >> Cannot edit defined data constant!')
         return
-    
+
     if name in extras_list:
         exists = True
         slot = extras_list.index(name)
     else:
         exists = False
-    
+
     parser = python_math_parser.PythonMathParser()
     parser.set_locals(locals_list + data_constant_names)
     try:
@@ -121,7 +123,7 @@ def add_quantity(shared, name=None, expression=None, no_save=False):
     except ValueError as e:
         print(str(e))
         return
-    
+
     for item in python_math_parser.walk(parsed):
         if isinstance(item[0], basestring):
             if item[0] in data_constant_names:
@@ -129,9 +131,10 @@ def add_quantity(shared, name=None, expression=None, no_save=False):
             else:
                 fm_slot = locals_list.index(item[0])
                 fm = shared.field_mappings[fm_slot]
-                field_tuple_str = str((fm.field.name, fm.index, fm.field.width))
+                field_tuple_str = str(
+                    (fm.field.name, fm.index, fm.field.width))
                 item[0] = field_tuple_str
-    
+
     fm = data.FieldMapping(name)
     fm.field = data.DataField(name, width=1, flags=['extra'])
     fm.field.extra = parsed
@@ -142,23 +145,23 @@ def add_quantity(shared, name=None, expression=None, no_save=False):
         shared.field_mappings[slot] = fm
     else:
         shared.field_mappings.append(fm)
-    
+
     if not no_save:
         shared.config.set('extra', name, expression)
 
-    
+
 def remove_quantity(shared):
     """
     Remove an extra quantity for field_mappings and config
     """
-    
+
     not_done = True
     while not_done:
         input_string = input('Enter name of quantity to remove '
                              '[leave blank to cancel]: ').strip()
         if not input_string:
             return
-        
+
         for i, fm in enumerate(shared.field_mappings):
             if fm.title == input_string:
                 if fm.extra is not None:
@@ -180,15 +183,15 @@ def clear_quantities(shared):
     """
     Clear all extra quantities from field_mappings and config
     """
-    
+
     del_list = [i for i, fm in enumerate(shared.field_mappings)
                 if fm.extra is not None]
     for index in reversed(del_list):
         del shared.field_mappings[index]
-    
+
     shared.config.remove_section('extra')
     shared.config.add_section('extra')
-    
+
 
 def get_field_names(parsed):
     """
@@ -202,7 +205,7 @@ def get_field_names(parsed):
             field_names.add(name)
 
     return list(field_names)
-    
+
 
 def get_field_tuples(parsed):
     """
@@ -216,7 +219,3 @@ def get_field_tuples(parsed):
             field_tuples.add((name, index, width))
 
     return list(field_tuples)
-
-
-
-

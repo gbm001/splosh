@@ -4,7 +4,7 @@ SPLASH, to view RAMSES data files.
 """
 __author__ = "Andrew McLeod"
 __license__ = "Public Domain"
-__version__ = "0.001"
+__version__ = "0.002"
 __code_name = "SPLOSH"
 
 __significant_figures = 6
