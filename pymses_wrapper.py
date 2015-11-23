@@ -826,16 +826,18 @@ def get_grid_data(x_field, x_index, xlim, y_field, y_index, ylim, zlim,
                                  multiprocessing=multiprocessing)
     else:
         # Slice map
+        coarse_res, fine_res = get_minmax_res(step.data_set)
         z_slice = (z_slice / box_length[z_index]) - 0.5
         # camera is at box centre
         
         # slice doesn't work if we are precisely along grid spacing.
-        z_res = z_slice * resolution
+        z_res = z_slice * fine_res
         if z_slice==0.0:
-            z_slice = z_slice + (0.01/resolution)
-        elif math.fmod(z_res,1) < 0.01:
-            z_slice = z_slice + ((0.01/resolution) *
+            z_slice = z_slice + (0.5/fine_res)
+        elif math.fmod(z_res,1) < 0.1:
+            z_slice = z_slice + ((0.5/fine_res) *
                                  math.copysign(1.0, -z_slice))
+        
         cam = Camera(center=box_centre, line_of_sight_axis=z_axis_name,
                      region_size=box_size_xy, up_vector=up_axis_name,
                      map_max_size=resolution, log_sensitive=False)
