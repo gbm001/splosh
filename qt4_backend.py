@@ -49,7 +49,7 @@ class BackendQT4(BackendMPL):
         self.FigureCanvas = FigureCanvas
         self.Figure = Figure
         
-        self.max_auto_resolution = 256
+        self.max_auto_resolution = 1024
         
         self.app = QtGui.QApplication.instance()
         if self.app is None:

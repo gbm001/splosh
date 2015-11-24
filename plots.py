@@ -472,9 +472,9 @@ def single_plot_data(x_axis, x_index, y_axis, y_index, render, render_index,
             box_len_y = None
         plot_options['box_length'] = (box_len_x, box_len_y)
         resolution = shared.config.get('render', 'resolution')
+        plot_options['minmax_res'] = step.minmax_res
         if resolution == 'auto':
             # identify resolution
-            plot_options['minmax_res'] = step.minmax_res
             backend_resolution = backend.max_auto_resolution
             dataset_resolution = step.minmax_res[1]
             resolution = min(backend_resolution, dataset_resolution)

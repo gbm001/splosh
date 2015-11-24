@@ -23,7 +23,7 @@ class BackendPNG(BackendMPL):
         self.FigureCanvas = FigureCanvas
         self.Figure = Figure
         
-        self.max_auto_resolution = 256
+        self.max_auto_resolution = 1024
         self.output_filename = ''
     
     def init_figure(self):
