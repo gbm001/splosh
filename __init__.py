@@ -19,10 +19,14 @@ from interactive import run
 
 backend_list = []
 try:
-    from qt4_backend import BackendQT4
-    backend_list.append(BackendQT4())
+    from qt5_backend import BackendQT5
+    backend_list.append(BackendQT5())
 except ImportError:
-    pass
+    try:
+        from qt4_backend import BackendQT4
+        backend_list.append(BackendQT4())
+    except ImportError:
+        pass
 try:
     from png_backend import BackendPNG
     backend_list.append(BackendPNG())
